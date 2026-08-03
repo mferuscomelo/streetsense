@@ -25,6 +25,29 @@ final class LenientJson {
         };
     }
 
+    static int asInt(Object raw) {
+        return switch (raw) {
+            case null -> throw new IllegalArgumentException("missing integer value");
+            case int i -> i;
+            // A grid bucket or an hour that arrived as 49006.0 is still that
+            // bucket — some JSON encoders emit every number as a double.
+            case double d when d == Math.rint(d) -> (int) d;
+            case double d -> throw new IllegalArgumentException("expected a whole number, got: " + d);
+            case String s -> Integer.parseInt(s);
+            default -> throw new IllegalArgumentException("unsupported integer value: " + raw);
+        };
+    }
+
+    static <E extends Enum<E>> E asEnum(Object raw, Class<E> type) {
+        String name = asString(raw);
+        try {
+            return Enum.valueOf(type, name.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(
+                    "unknown " + type.getSimpleName() + ": " + name, e);
+        }
+    }
+
     static String asString(Object raw) {
         return switch (raw) {
             case null -> throw new IllegalArgumentException("missing string value");

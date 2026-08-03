@@ -1,8 +1,8 @@
 package io.streetsense.backend.baseline;
 
+import io.streetsense.backend.domain.CellKey;
 import io.streetsense.backend.domain.CellStats;
 import io.streetsense.backend.domain.DecodedReading;
-import io.streetsense.backend.domain.GridCell;
 import io.streetsense.backend.repository.ReadingRepository;
 import org.springframework.stereotype.Component;
 
@@ -30,19 +30,19 @@ public class RollingBaseline {
     private static final int HISTORY_LIMIT = 50;
 
     private final ReadingRepository repository;
-    private final Map<GridCell, CellStats> cache = new ConcurrentHashMap<>();
+    private final Map<CellKey, CellStats> cache = new ConcurrentHashMap<>();
 
     public RollingBaseline(ReadingRepository repository) {
         this.repository = repository;
     }
 
-    public CellStats currentBaseline(GridCell cell) {
-        return cache.getOrDefault(cell, CellStats.of(List.of()));
+    public CellStats currentBaseline(CellKey key) {
+        return cache.getOrDefault(key, CellStats.of(List.of()));
     }
 
     /** Recomputes and caches the baseline for {@code reading}'s cell, including it. */
     public CellStats update(DecodedReading reading) {
-        List<DecodedReading> history = new ArrayList<>(repository.recentForCell(reading.cell(), HISTORY_LIMIT));
+        List<DecodedReading> history = new ArrayList<>(repository.recentForKey(reading.key(), HISTORY_LIMIT));
         history.add(reading);
 
         CellStats result;
@@ -57,7 +57,7 @@ public class RollingBaseline {
                     .orElseGet(() -> CellStats.of(history));
         }
 
-        cache.put(reading.cell(), result);
+        cache.put(reading.key(), result);
         return result;
     }
 }

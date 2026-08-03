@@ -1,5 +1,6 @@
 package io.streetsense.backend.web;
 
+import io.streetsense.backend.domain.Activity;
 import io.streetsense.backend.domain.CellStats;
 import io.streetsense.backend.domain.DecodedReading;
 import io.streetsense.backend.domain.GridCell;
@@ -50,7 +51,8 @@ class ReadingControllerTest {
     @Test
     void postReadingsReturnsDecodedVerdict() throws Exception {
         DecodedPacket packet = new DecodedPacket(1, true, 42, 8.3, 15.7, 19.2, 24.6, 134.5, 21.37, 52.80, 58.4);
-        DecodedReading reading = new DecodedReading(packet, CELL, 49.0069, 8.4037, Instant.parse("2026-08-03T12:00:00Z"));
+        DecodedReading reading = new DecodedReading(
+                packet, CELL, 12, "session-1", "contributor-a", Activity.RUN, Instant.parse("2026-08-03T12:00:00Z"));
         StoredReading stored = new StoredReading(1L, reading, null, Instant.now());
         CellStats baseline = CellStats.of(List.of());
         Verdict verdict = new Verdict.Normal(baseline);
@@ -60,7 +62,9 @@ class ReadingControllerTest {
         mockMvc.perform(post("/api/v1/readings")
                         .contentType("application/json")
                         .content("""
-                                {"rawPacket":"%s","lat":49.0069,"lon":8.4037,"capturedAt":"2026-08-03T12:00:00Z"}
+                                {"rawPacket":"%s","latBucket":49006,"lonBucket":8403,
+                                 "hourOfDay":12,"sessionId":"session-1","contributorId":"contributor-a","activity":"RUN",
+                                 "capturedAt":"2026-08-03T12:00:00Z"}
                                 """.formatted(GOLDEN_PACKET_B64)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.mock").value(true))
@@ -69,9 +73,55 @@ class ReadingControllerTest {
     }
 
     @Test
+    void aLegacyCoordinatePayloadIsRejectedRatherThanQuietlyAccepted() throws Exception {
+        // An app build from before the privacy split posts lat/lon and no
+        // cell. The failure mode that matters is the silent one: if those keys
+        // were tolerated and re-snapped server-side, trace upload would be
+        // back with nobody noticing. Refusing the submission is the point.
+        mockMvc.perform(post("/api/v1/readings")
+                        .contentType("application/json")
+                        .content("""
+                                {"rawPacket":"%s","lat":49.0069,"lon":8.4037,
+                                 "capturedAt":"2026-08-03T12:00:00Z"}
+                                """.formatted(GOLDEN_PACKET_B64)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void ingestTakesCellBucketsAndNeverEchoesAPreciseCoordinate() throws Exception {
+        // The privacy pillar, asserted rather than documented: the phone snaps
+        // to a cell before uploading, so there is no precise coordinate for the
+        // backend to store, log, or hand back. A regression here would leak a
+        // movement trace silently — nothing else would fail.
+        DecodedPacket packet = new DecodedPacket(1, true, 42, 8.3, 15.7, 19.2, 24.6, 134.5, 21.37, 52.80, 58.4);
+        DecodedReading reading = new DecodedReading(
+                packet, CELL, 12, "session-1", "contributor-a", Activity.RUN, Instant.parse("2026-08-03T12:00:00Z"));
+        StoredReading stored = new StoredReading(1L, reading, null, Instant.now());
+        CellStats baseline = CellStats.of(List.of());
+        Verdict verdict = new Verdict.Normal(baseline);
+
+        when(ingestService.ingest(any(), anyString())).thenReturn(new IngestResult(stored, baseline, verdict));
+
+        mockMvc.perform(post("/api/v1/readings")
+                        .contentType("application/json")
+                        .content("""
+                                {"rawPacket":"%s","latBucket":49006,"lonBucket":8403,
+                                 "hourOfDay":12,"sessionId":"session-1","contributorId":"contributor-a","activity":"RUN",
+                                 "capturedAt":"2026-08-03T12:00:00Z"}
+                                """.formatted(GOLDEN_PACKET_B64)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.lat").doesNotExist())
+                .andExpect(jsonPath("$.lon").doesNotExist())
+                .andExpect(jsonPath("$.cell.latBucket").value(49006))
+                .andExpect(jsonPath("$.cell.lonBucket").value(8403))
+                .andExpect(jsonPath("$.hourOfDay").value(12));
+    }
+
+    @Test
     void recentReturnsDecodedListing() throws Exception {
         DecodedPacket packet = new DecodedPacket(1, true, 42, 8.3, 15.7, 19.2, 24.6, 134.5, 21.37, 52.80, 58.4);
-        DecodedReading reading = new DecodedReading(packet, CELL, 49.0069, 8.4037, Instant.now());
+        DecodedReading reading = new DecodedReading(
+                packet, CELL, 12, "session-1", "contributor-a", Activity.RUN, Instant.now());
         Verdict verdict = new Verdict.Normal(CellStats.of(List.of()));
         StoredReading stored = new StoredReading(1L, reading, verdict, Instant.now());
 
