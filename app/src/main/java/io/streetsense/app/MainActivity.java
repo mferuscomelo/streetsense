@@ -10,6 +10,7 @@ import android.widget.TextView;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AlertDialog;
 
 import java.util.Locale;
 import java.util.Map;
@@ -17,6 +18,9 @@ import java.util.Map;
 import io.streetsense.app.ble.BleScanner;
 import io.streetsense.app.ble.SensorNodeClient;
 import io.streetsense.app.ble.SensorPacket;
+import io.streetsense.app.debrief.SessionDebriefActivity;
+import io.streetsense.app.debrief.SessionHistoryActivity;
+import io.streetsense.app.debrief.TraceCache;
 import io.streetsense.app.location.LocationTagger;
 import io.streetsense.app.session.Activity;
 import io.streetsense.app.session.ContributorId;
@@ -44,6 +48,7 @@ public final class MainActivity extends AppCompatActivity {
     private TextView mockBadge;
     private TextView readingsText;
     private Button startStopButton;
+    private Button historyButton;
 
     private BleScanner scanner;
     private SensorNodeClient client;
@@ -85,6 +90,9 @@ public final class MainActivity extends AppCompatActivity {
         mockBadge = findViewById(R.id.mockBadge);
         readingsText = findViewById(R.id.readingsText);
         startStopButton = findViewById(R.id.startStopButton);
+        historyButton = findViewById(R.id.historyButton);
+        historyButton.setOnClickListener(v ->
+                startActivity(SessionHistoryActivity.intent(this, BACKEND_BASE_URL)));
 
         locationTagger = new LocationTagger(this);
         uploader = new ReadingUploader(BACKEND_BASE_URL);
@@ -126,11 +134,23 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void start() {
+        // Ventilation rate is what turns a concentration into a dose (see
+        // Activity.ventilationMultiplier on the backend), so the choice made
+        // here is what makes the debrief's headline number meaningful rather
+        // than an arbitrary guess.
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.activity_picker_title)
+                .setItems(R.array.activity_picker_options, (dialog, which) -> {
+                    Activity[] options = {Activity.RUN, Activity.CYCLE, Activity.WALK};
+                    beginSession(options[which]);
+                })
+                .setOnCancelListener(dialog -> { /* no session starts without a choice */ })
+                .show();
+    }
+
+    private void beginSession(Activity activity) {
         running = true;
-        // Step 6 replaces this with a Run/Cycle/Walk picker. Until then WALK
-        // is the honest default: it is the lowest ventilation multiplier, so
-        // an unchosen activity under-reports dose rather than inflating it.
-        session.start(Activity.WALK);
+        session.start(activity);
         startStopButton.setText(R.string.action_stop);
         permissionLauncher.launch(new String[]{
                 Manifest.permission.BLUETOOTH_SCAN,
@@ -153,8 +173,22 @@ public final class MainActivity extends AppCompatActivity {
         scanner.stop();
         client.disconnect();
         locationTagger.stop();
+
+        // Snapshot before stop() — start() is what clears the trace, so this
+        // is safe, but reading it after would be one accidental reorder away
+        // from handing the debrief screen an empty route.
+        String finishedSessionId = session.sessionId();
+        TraceCache.set(session.trace());
         session.stop();
+
         statusText.setText(R.string.status_idle);
+        if (finishedSessionId != null) {
+            // The last few readings may still be in ReadingUploader's queue
+            // when this fires — same eventual-consistency tradeoff the app
+            // already accepts by having no offline retry queue. The debrief
+            // reflects whatever the backend has ingested by the time it's asked.
+            startActivity(SessionDebriefActivity.intent(this, finishedSessionId, BACKEND_BASE_URL));
+        }
     }
 
     private void onNodeFound(BluetoothDevice device) {
