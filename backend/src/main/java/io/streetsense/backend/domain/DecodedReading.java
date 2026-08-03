@@ -5,14 +5,31 @@ import io.streetsense.backend.wire.DecodedPacket;
 import java.time.Instant;
 
 /**
- * A decoded packet plus the GPS/time context the phone attached to it.
+ * A decoded packet plus the context the phone attached to it.
+ *
+ * <p><b>There is deliberately no latitude or longitude here.</b> The phone
+ * snaps its GPS fix to a {@link GridCell} before uploading and keeps the
+ * precise trace on the device, so the backend never receives — and therefore
+ * cannot store, log, or leak — a contributor's path. That is the whole
+ * privacy model, and it holds because this type has nowhere to put a
+ * coordinate, not because every future call site remembers not to persist
+ * one.
+ *
+ * <p>The session map in the app is drawn from the phone's own local trace,
+ * never from anything the server holds.
  */
 public record DecodedReading(
         DecodedPacket packet,
         GridCell cell,
-        double lat,
-        double lon,
+        int hourOfDay,
+        String sessionId,
+        String contributorId,
+        Activity activity,
         Instant capturedAt) {
+
+    public CellKey key() {
+        return new CellKey(cell, hourOfDay);
+    }
 
     public boolean mock() {
         return packet.mock();

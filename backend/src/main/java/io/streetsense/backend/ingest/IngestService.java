@@ -37,9 +37,9 @@ public class IngestService {
         this.detector = detector;
     }
 
-    public IngestResult ingest(DecodedReading reading, String nodeId) throws Exception {
-        IngestContext context = new IngestContext(nodeId, UUID.randomUUID().toString());
-        CellStats previousBaseline = baseline.currentBaseline(reading.cell());
+    public IngestResult ingest(DecodedReading reading, String contributorId) throws Exception {
+        IngestContext context = new IngestContext(contributorId, UUID.randomUUID().toString());
+        CellStats previousBaseline = baseline.currentBaseline(reading.key());
 
         return ScopedValue.where(IngestContext.CURRENT, context).call(() -> {
             try (var scope = StructuredTaskScope.open()) {

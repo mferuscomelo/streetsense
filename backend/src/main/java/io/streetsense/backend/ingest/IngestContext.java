@@ -8,6 +8,6 @@ package io.streetsense.backend.ingest;
  * forked them — that inheritance is what makes this pairing deliberate
  * rather than two unrelated features used side by side.
  */
-public record IngestContext(String nodeId, String correlationId) {
+public record IngestContext(String contributorId, String correlationId) {
     public static final ScopedValue<IngestContext> CURRENT = ScopedValue.newInstance();
 }

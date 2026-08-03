@@ -59,14 +59,19 @@ suites.
 ## Version authority
 
 The phone app forwards these 20 bytes **verbatim** — base64-encoded,
-alongside GPS and a capture timestamp — rather than re-deriving a decoded
-JSON object. The backend, via the Foreign Function & Memory API
-(`backend/.../wire/PacketLayout.java`), is the sole authority on decoding.
-This means a firmware/backend upgrade to a wider `version = 2` packet still
-relays correctly through phones running an older app build, since the app
-never re-encodes what it doesn't understand. The app does decode a subset
-of fields for its own live display (`app/.../ble/SensorPacket.java`) — that
-duplication is real and intentional, not eliminated, just kept minimal.
+alongside a grid cell, hour of day, session id, and activity — rather than
+re-deriving a decoded JSON object. The backend, via the Foreign Function &
+Memory API (`backend/.../wire/PacketLayout.java`), is the sole authority on
+decoding. This means a firmware/backend upgrade to a wider `version = 2`
+packet still relays correctly through phones running an older app build,
+since the app never re-encodes what it doesn't understand. The app does
+decode a subset of fields for its own live display
+(`app/.../ble/SensorPacket.java`) — that duplication is real and
+intentional, not eliminated, just kept minimal.
+
+Note what is *not* forwarded: raw GPS. The phone snaps its fix to the grid
+cell before uploading and keeps the precise trace to itself — see
+`docs/honest-caveats.md` for why.
 
 ## Honesty mechanism
 

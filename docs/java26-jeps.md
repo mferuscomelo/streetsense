@@ -28,6 +28,16 @@ skewing future anomaly checks). `StructuredTaskScope.open()` + `fork()` +
 `join()` is a direct, honest fit for "these three things either all
 succeed or the request fails."
 
+**Considered and declined a second time:** the crowd merge
+(`backend/.../crowd/CrowdService.java`) was a candidate for a second
+`StructuredTaskScope` site — per-hour lookups fanned out across a cell.
+Written out, it was ceremony around a handful of in-memory map reads that
+don't block; forking buys nothing a plain loop doesn't already have. The
+honest move for a strained feature is to drop it, not defend it, so it's
+dropped — see the comment on `CrowdService` for the reasoning, and
+`docs/future-work.md` for the condition (a Postgres-backed repository)
+under which the case would change.
+
 ### JEP 530 — Primitive Types in Patterns, `instanceof`, and `switch` (4th preview)
 **Where:** `backend/.../web/LenientJson.java`
 **Why:** Ingest JSON fields legitimately arrive as different boxed types
@@ -78,22 +88,44 @@ side.
 
 ### Stream Gatherers (JEP 485, final in 24)
 **Where:** `backend/.../baseline/RollingBaseline.java`,
-`backend/.../baseline/EwmaGatherer.java`
-**Why:** The rolling per-cell baseline is the feature the entire "AI" claim
-rests on, and a sliding window over recent readings is literally what
+`backend/.../baseline/EwmaGatherer.java`,
+`backend/.../session/DoseGatherer.java`,
+`backend/.../session/SessionSummariser.java`
+**Why:** The rolling per-`(cell, hour)` baseline is the feature the "AI"
+claim rests on, and a sliding window over recent readings is literally what
 `Gatherers.windowSliding(n)` is for. A custom `Gatherer` folds those windows
 into one running EWMA-smoothed value, so a single noisy reading nudges the
 baseline instead of replacing it outright.
 
+A second slice added two more Gatherer uses with genuinely different
+shapes, not restatements of the first: `DoseGatherer` is a stateful fold
+where each reading's contribution depends on the *gap* to the reading
+before it (inhaled dose accumulates over elapsed time, not reading count),
+which `reduce` cannot express without external state. `SessionSummariser`
+reuses `Gatherers.windowSliding` a second time, over a session's own
+readings, to find the worst 30-reading stretch of a run rather than only a
+session-wide mean — the same primitive, applied to a genuinely different
+question ("where was it worst" vs. "what is normal here").
+
 ### Sealed interface + records + exhaustive switch
 **Where:** `backend/.../domain/Verdict.java`,
 `backend/.../web/VerdictView.java`
-**Why:** `Verdict` is `Normal | Elevated | Spike`, closed by `sealed
-interface ... permits`. Switching over it needs no `default` branch —
-adding a fourth verdict later becomes a compile error at every site that
-must handle it (`VerdictView.of` is the clearest example). This also gives
-the JEP 530 primitive-pattern switch a real, non-trivial domain model to
-sit beside.
+**Why:** `Verdict` was originally `Normal | Elevated | Spike` — a severity
+scale with no semantics, closed by `sealed interface ... permits`. It is now
+`Normal | TrafficPlume | SmokeOrExhaust | Solvent | LoudButClean`: the
+detector already computed z-scores for particulates, VOC, and noise, and the
+old version discarded two of them in favour of whichever was largest. The
+*combination* of which channels moved is the actual diagnosis — particulates
+alone reads as road dust, particulates with VOC as combustion, VOC alone as
+solvent, noise alone as loud-but-clean air.
+
+Switching over the sealed hierarchy needs no `default` branch — adding a
+sixth diagnosis is a compile error at every site that must handle it, and
+`VerdictView.of` (which turns a verdict into the sentence the app shows,
+e.g. *"Fumes are 18.0× the usual spread here with particulates untouched"*)
+is where that constraint is actually exercised, not just claimed. This is
+also what gives the JEP 530 primitive-pattern switch a real, non-trivial
+domain model to sit beside.
 
 ### Virtual threads
 **Where:** `backend/src/main/resources/application.yml`

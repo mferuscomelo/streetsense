@@ -1,17 +1,27 @@
 package io.streetsense.backend.web;
 
 import io.streetsense.backend.domain.DecodedReading;
+import io.streetsense.backend.domain.GridCell;
 import io.streetsense.backend.domain.Verdict;
 import io.streetsense.backend.repository.StoredReading;
 
 import java.time.Instant;
 
+/**
+ * The API's view of one reading. Carries a cell, never a coordinate — see
+ * {@link DecodedReading}. If a {@code lat}/{@code lon} pair ever reappears
+ * here, the privacy model has been broken somewhere upstream.
+ */
 public record ReadingView(
         long id,
         boolean mock,
         double pm1, double pm2_5, double pm4, double pm10,
         double vocIndex, double tempC, double humidity, double noiseDb,
-        double lat, double lon,
+        GridCell cell,
+        int hourOfDay,
+        String sessionId,
+        String contributorId,
+        String activity,
         Instant capturedAt,
         VerdictView verdict) {
 
@@ -21,7 +31,8 @@ public record ReadingView(
                 stored.id(), r.mock(),
                 r.pm1(), r.pm2_5(), r.pm4(), r.pm10(),
                 r.vocIndex(), r.tempC(), r.humidity(), r.noiseDb(),
-                r.lat(), r.lon(), r.capturedAt(),
+                r.cell(), r.hourOfDay(), r.sessionId(), r.contributorId(), r.activity().name(),
+                r.capturedAt(),
                 VerdictView.of(verdict));
     }
 

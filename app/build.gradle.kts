@@ -44,5 +44,9 @@ android {
 dependencies {
     implementation(libs.material)
     implementation(libs.appcompat)
+    // OpenStreetMap tiles for the session map — chosen over the Google Maps
+    // SDK specifically to avoid an API key, a billing account, and
+    // proprietary tile terms. See docs/attribution.md.
+    implementation(libs.osmdroid)
     testImplementation(libs.junit)
 }

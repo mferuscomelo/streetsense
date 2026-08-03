@@ -3,11 +3,20 @@ package io.streetsense.backend.domain;
 import java.util.List;
 
 /**
- * Rolling per-pollutant statistics for a grid cell, produced by the
- * Gatherers-based windowing pipeline in baseline/RollingBaseline.java.
+ * Rolling per-pollutant statistics for one cell at one hour of day, produced
+ * by the Gatherers-based windowing pipeline in baseline/RollingBaseline.java.
+ *
+ * <p>{@code sampleCount} and {@code contributorCount} are both here because
+ * they answer different questions and the difference is the crowd layer's
+ * whole claim to honesty. Four hundred readings from one person walking the
+ * same street every morning is not the same evidence as four hundred readings
+ * from twelve people, and a viewer has to be able to tell which they are
+ * looking at. Every surface that shows a verdict shows the confidence behind
+ * it.
  */
 public record CellStats(
         int sampleCount,
+        int contributorCount,
         double meanPm2_5, double stdDevPm2_5,
         double meanVoc, double stdDevVoc,
         double meanNoiseDb, double stdDevNoiseDb) {
@@ -21,7 +30,13 @@ public record CellStats(
         double stdVoc = stdDev(window.stream().mapToDouble(DecodedReading::vocIndex), meanVoc);
         double stdNoise = stdDev(window.stream().mapToDouble(DecodedReading::noiseDb), meanNoise);
 
-        return new CellStats(window.size(), meanPm, stdPm, meanVoc, stdVoc, meanNoise, stdNoise);
+        int contributors = (int) window.stream()
+                .map(DecodedReading::contributorId)
+                .distinct()
+                .count();
+
+        return new CellStats(window.size(), contributors,
+                meanPm, stdPm, meanVoc, stdVoc, meanNoise, stdNoise);
     }
 
     private static double stdDev(java.util.stream.DoubleStream values, double mean) {

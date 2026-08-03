@@ -4,9 +4,12 @@ Deliberately out of scope for slice 1. Listed here rather than left
 unstated, so the scope cuts read as decisions, not gaps.
 
 ## Hardware / firmware
-- **Swap in the real SEN54** — implement `Sen54SensorSource` (currently a
-  stub) against the I2C driver; nothing else changes since it produces the
-  same `Reading` the mock source does.
+- **Verify the real SEN54 against physical hardware.** `Sen54SensorSource`
+  is implemented against Sensirion's own I2C driver and the onboard PDM mic
+  (`ledglasses_sen54` environment) and compiles, but has not yet been run on
+  the actual sensor — it's currently committed to another project. Flash
+  `ledglasses_sen54` and confirm real readings over `pio device monitor`
+  before treating it as more than "compiles."
 - **Motion tagging via the LIS3DH** — the onboard accelerometer (not a full
   IMU — see the root README) could flag readings taken while walking vs.
   stationary, which matters for noise readings especially.
@@ -21,10 +24,15 @@ unstated, so the scope cuts read as decisions, not gaps.
 ## Backend
 - **Postgres/PostGIS** — `ReadingRepository` is already an interface for
   exactly this; the in-memory implementation is a bounded ring buffer that
-  will not survive a restart or scale past a single demo.
-- **Real grid sophistication** — `GridCell` is a crude fixed-size lat/lon
-  bucket. PostGIS-backed spatial binning (tuned cell size, actual distance
-  queries) replaces it without an API change.
+  will not survive a restart or scale past a single demo. If this lands,
+  the per-cell aggregations in `CrowdService` become independent queries
+  rather than in-memory map reads, and structured concurrency becomes a
+  genuine fit for fanning them out — see the note in `docs/java26-jeps.md`
+  on why it was declined for the in-memory version.
+- **Real grid sophistication** — `GridCell` is a fixed-size lat/lon bucket
+  (~110m, tuned for the privacy/route-resolution trade — see the constant's
+  own docs). PostGIS-backed spatial binning (tuned cell size, actual
+  distance queries) replaces it without an API change.
 - **True mesh networking** — this is a distributed sensing network (many
   independent phone-to-backend uploads), not a mesh (nodes don't relay for
   each other). Worth exploring if node density ever makes direct backend

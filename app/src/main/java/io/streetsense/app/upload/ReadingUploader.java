@@ -4,22 +4,38 @@ import android.location.Location;
 import android.util.Base64;
 import android.util.Log;
 
+import io.streetsense.app.location.GridCell;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.LocalTime;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Uploads a raw sensor packet verbatim, plus GPS and capture time, to the
- * backend. The backend — not this app — is the sole authority on decoding
- * the packet; see ble/SensorPacket.java for why that split exists.
+ * Uploads a raw sensor packet verbatim, plus the cell it was taken in and the
+ * session it belongs to. The backend — not this app — is the sole authority on
+ * decoding the packet; see ble/SensorPacket.java for why that split exists.
  *
- * No offline queue: a failed upload is dropped. That's an explicit scope
- * cut for slice 1 — see docs/future-work.md.
+ * <p><b>The precise GPS fix never leaves this class.</b> It is snapped to a
+ * {@link GridCell} here, on the device, and only the bucket pair is sent. The
+ * backend therefore has no coordinate to store, log, or leak, and the session
+ * map is drawn from the phone's own local trace instead. This method is the
+ * one place that boundary is enforced — if a lat/lon ever reappears in the
+ * JSON below, the privacy model is broken.
+ *
+ * <p>{@code hourOfDay} is the phone's <em>local</em> hour, deliberately not
+ * derived server-side from the capture instant: the backend groups readings by
+ * hour to answer "when is this block quietest", and a UTC hour would smear
+ * rush hour across timezones as soon as there is more than one contributor
+ * city.
+ *
+ * <p>No offline queue: a failed upload is dropped. That's an explicit scope
+ * cut — see docs/future-work.md.
  */
 public final class ReadingUploader {
 
@@ -32,12 +48,26 @@ public final class ReadingUploader {
         this.baseUrl = baseUrl;
     }
 
-    public void upload(byte[] rawPacket, Location location) {
-        executor.execute(() -> uploadBlocking(rawPacket, location));
+    /**
+     * @param location the raw fix; snapped to a cell here and never sent as-is.
+     *                 A null location means no fix yet — the reading is dropped
+     *                 rather than uploaded against a fabricated (0,0) cell,
+     *                 which would poison a real grid cell off the Gulf of Guinea.
+     */
+    public void upload(byte[] rawPacket, Location location, String sessionId,
+                       String contributorId, String activity) {
+        if (location == null) {
+            Log.d(TAG, "no fix yet — dropping reading rather than inventing a cell");
+            return;
+        }
+        GridCell cell = GridCell.of(location.getLatitude(), location.getLongitude());
+        int hourOfDay = LocalTime.now().getHour();
+        executor.execute(() -> uploadBlocking(rawPacket, cell, hourOfDay, sessionId, contributorId, activity));
     }
 
-    private void uploadBlocking(byte[] rawPacket, Location location) {
-        String body = toJson(rawPacket, location);
+    private void uploadBlocking(byte[] rawPacket, GridCell cell, int hourOfDay,
+                                String sessionId, String contributorId, String activity) {
+        String body = toJson(rawPacket, cell, hourOfDay, sessionId, contributorId, activity);
         try {
             URL url = new URL(baseUrl + "/api/v1/readings");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -64,16 +94,19 @@ public final class ReadingUploader {
         }
     }
 
-    private static String toJson(byte[] rawPacket, Location location) {
+    private static String toJson(byte[] rawPacket, GridCell cell, int hourOfDay,
+                                 String sessionId, String contributorId, String activity) {
         String rawPacketB64 = Base64.encodeToString(rawPacket, Base64.NO_WRAP);
-        double lat = location != null ? location.getLatitude() : 0.0;
-        double lon = location != null ? location.getLongitude() : 0.0;
         String capturedAt = Instant.now().toString();
 
         return "{"
                 + "\"rawPacket\":\"" + rawPacketB64 + "\","
-                + "\"lat\":" + lat + ","
-                + "\"lon\":" + lon + ","
+                + "\"latBucket\":" + cell.latBucket() + ","
+                + "\"lonBucket\":" + cell.lonBucket() + ","
+                + "\"hourOfDay\":" + hourOfDay + ","
+                + "\"sessionId\":\"" + sessionId + "\","
+                + "\"contributorId\":\"" + contributorId + "\","
+                + "\"activity\":\"" + activity + "\","
                 + "\"capturedAt\":\"" + capturedAt + "\""
                 + "}";
     }

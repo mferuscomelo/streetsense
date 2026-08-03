@@ -1,7 +1,16 @@
 #include <bluefruit.h>
 #include "packet.h"
 #include "ble_uuids.h"
+
+// Which sensor path gets compiled in is the only difference between the two
+// ledglasses environments in platformio.ini. Everything downstream — the
+// packet, the app, the backend — is identical either way; the mock flags
+// itself on the wire via FLAG_MOCK_DATA.
+#if defined(STREETSENSE_MOCK) && STREETSENSE_MOCK
 #include "mock_sensor_source.h"
+#else
+#include "sen54_sensor_source.h"
+#endif
 
 namespace {
 constexpr uint32_t NOTIFY_INTERVAL_MS = 1000;
@@ -10,7 +19,12 @@ BLEService streetSenseService(STREETSENSE_SERVICE_UUID);
 BLECharacteristic streetSenseChar(STREETSENSE_CHAR_UUID);
 BLEDis deviceInfo;
 
+#if defined(STREETSENSE_MOCK) && STREETSENSE_MOCK
 MockSensorSource sensorSource;
+#else
+Sen54SensorSource sensorSource;
+#endif
+
 uint16_t sequence = 0;
 uint32_t lastNotifyMs = 0;
 
@@ -34,6 +48,15 @@ void startAdvertising() {
 
 void setup() {
     Serial.begin(115200);
+
+    // Deliberately not fatal. If the SEN54 is unplugged or the mic won't
+    // start, the node still advertises and stays connectable — it simply
+    // never notifies, because read() keeps returning false. A node that
+    // vanishes from the air is much harder to diagnose in the field than one
+    // that is present but silent.
+    if (!sensorSource.begin()) {
+        Serial.println("sensor source failed to start — no packets will be sent");
+    }
 
     Bluefruit.begin();
     Bluefruit.setTxPower(4);
