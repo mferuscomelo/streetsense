@@ -51,7 +51,23 @@ java --enable-preview -jar build/libs/backend-0.1.0.jar   # --enable-preview is 
 
 ### app
 
-Open `/app` in Android Studio, build, and install on a physical phone — **BLE does not work in the emulator**. Point `ReadingUploader`'s base URL at your backend's LAN IP.
+Requires a **physical phone** — BLE does not work in the emulator.
+
+```sh
+cd app
+echo "sdk.dir=$HOME/Android/Sdk" > local.properties   # Android Studio writes this for you on first open
+./gradlew assembleDebug                                # or just Run ▶ in Android Studio
+```
+
+Before running end-to-end:
+
+1. **Enable USB debugging** on the phone (Settings → About → tap Build number 7× → Developer options), plug it in, and accept the RSA prompt. Verify with `~/Android/Sdk/platform-tools/adb devices` — use the SDK's `adb`, not a distro-packaged one, or the two will fight over the adb server.
+2. **Point the app at your backend.** `MainActivity.BACKEND_BASE_URL` and `res/xml/network_security_config.xml` must agree — cleartext HTTP is blocked unless the host is listed in that config. Two supported paths:
+   - **WiFi**: phone and laptop on the same network; set both to the laptop's LAN IP and allow inbound 8080 through its firewall.
+   - **USB** (simpler, survives DHCP changes): `adb reverse tcp:8080 tcp:8080` and use `http://localhost:8080`.
+3. **Turn Location on** at the system level, and grant **Precise** (not Approximate) when prompted — a ~1km coarse fix can't place a reading in a ~1.1km grid cell, so the app asks for precise and says so if it doesn't get it.
+
+Tap **Start** → it scans, connects to `StreetSense-01`, and ticks live values at 1 Hz with a **MOCK** badge. Confirm the full chain with `curl http://<backend>:8080/api/v1/readings/recent`.
 
 ### Demo video
 

@@ -1,5 +1,6 @@
 package io.streetsense.app.ble;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.BluetoothLeScanner;
@@ -18,6 +19,11 @@ import java.util.UUID;
  * so we never see unrelated BLE peripherals. See docs/ble-protocol.md for
  * the UUID values — they must match firmware/src/ble_uuids.h exactly.
  */
+// MainActivity gates every entry point here behind a granted BLUETOOTH_SCAN /
+// BLUETOOTH_CONNECT request, so the permission checks lint asks for would be
+// unreachable duplicates. (Revoking a permission at runtime restarts the
+// process, so there's no live window where these calls run unpermitted.)
+@SuppressLint("MissingPermission")
 public final class BleScanner {
 
     public static final UUID SERVICE_UUID =

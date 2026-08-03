@@ -1,10 +1,12 @@
 package io.streetsense.app.ble;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.os.Build;
@@ -19,6 +21,9 @@ import java.util.UUID;
  * caller on the main thread. GATT callbacks arrive on a Binder thread, so
  * every callback here hops to main before touching the listener.
  */
+// See BleScanner: all entry points are gated behind granted BLE permissions
+// in MainActivity, so lint's requested checks would be unreachable duplicates.
+@SuppressLint("MissingPermission")
 public final class SensorNodeClient {
 
     public static final UUID CHARACTERISTIC_UUID =
@@ -71,8 +76,17 @@ public final class SensorNodeClient {
 
         @Override
         public void onServicesDiscovered(BluetoothGatt g, int status) {
+            // Discovery can fail, or report a peer without our service — in
+            // either case getService returns null, so this must not be chained
+            // blindly or the app crashes instead of reporting a failed connect.
+            BluetoothGattService service = g.getService(BleScanner.SERVICE_UUID);
+            if (service == null) {
+                notifyState(State.DISCONNECTED);
+                return;
+            }
+
             BluetoothGattCharacteristic characteristic =
-                    g.getService(BleScanner.SERVICE_UUID).getCharacteristic(CHARACTERISTIC_UUID);
+                    service.getCharacteristic(CHARACTERISTIC_UUID);
             if (characteristic == null) {
                 notifyState(State.DISCONNECTED);
                 return;

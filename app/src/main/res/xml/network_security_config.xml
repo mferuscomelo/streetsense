@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  targetSdk >= 28 blocks plaintext HTTP by default. The dev backend serves
+  plain HTTP on the LAN, so without this every upload fails with
+  CLEARTEXT_NOT_PERMITTED — and ReadingUploader only logs a warning, so the
+  failure would be invisible in the UI while BLE kept working perfectly.
+
+  Scoped to exactly two hosts rather than blanket-enabling cleartext, so the
+  app doesn't trust arbitrary plaintext endpoints:
+    - 192.168.8.200 — the dev laptop over WiFi, for an untethered demo.
+      If the laptop's LAN IP changes, update this AND
+      MainActivity.BACKEND_BASE_URL, or uploads silently stop.
+    - localhost     — for `adb reverse tcp:8080 tcp:8080` over USB, which
+      sidesteps firewall rules and DHCP reassignment entirely.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">192.168.8.200</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>

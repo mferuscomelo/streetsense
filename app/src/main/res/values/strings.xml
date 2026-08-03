@@ -8,5 +8,8 @@
     <string name="status_connecting">Connecting…</string>
     <string name="status_connected">Connected</string>
     <string name="status_disconnected">Disconnected</string>
+    <string name="status_waiting_for_gps">Connected — waiting for GPS fix…</string>
+    <string name="status_permissions_denied">Bluetooth permissions denied</string>
+    <string name="status_needs_precise_location">Needs Precise location (not Approximate)</string>
     <string name="mock_badge">MOCK DATA</string>
 </resources>

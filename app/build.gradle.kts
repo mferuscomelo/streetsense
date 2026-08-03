@@ -4,11 +4,13 @@ plugins {
 
 android {
     namespace = "io.streetsense.app"
-    // NOTE: compileSdk/targetSdk are pinned to whatever was current when this
-    // was written (Android Studio 2026.x era). Bump both to match whatever
-    // your installed Android Studio ships, per the plan ("Android SDK is
-    // yours") — this repo doesn't pin a specific Studio version.
-    compileSdk = 36
+    // compileSdk must match a platform actually installed in ~/Android/Sdk —
+    // 37 is what's there, and is also AGP 9.3.1's highest supported API.
+    // targetSdk stays at 36 deliberately: it's just a manifest number needing
+    // no installed platform, and holding it back avoids opting into Android
+    // 17's newest behaviour changes. Cleartext is still restricted at 36, so
+    // the network security config below is still required.
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "io.streetsense.app"
