@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">StreetSense</string>
+    <string name="action_start">Start</string>
+    <string name="action_stop">Stop</string>
+    <string name="status_idle">Idle</string>
+    <string name="status_scanning">Scanning…</string>
+    <string name="status_connecting">Connecting…</string>
+    <string name="status_connected">Connected</string>
+    <string name="status_disconnected">Disconnected</string>
+    <string name="mock_badge">MOCK DATA</string>
+</resources>

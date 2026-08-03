@@ -1,0 +1,36 @@
+# --- firmware (PlatformIO) ---
+firmware/.pio/
+firmware/.pioenvs/
+firmware/.piolibdeps/
+
+# --- Android / Gradle ---
+app/.gradle/
+app/build/
+app/.cxx/
+app/local.properties
+app/*.iml
+app/.idea/
+backend/.gradle/
+backend/build/
+backend/*.iml
+backend/.idea/
+.gradle/
+*.iml
+.idea/
+local.properties
+
+# --- JVM ---
+*.class
+*.log
+!/build.log
+hs_err_pid*
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+*.swp
+
+# --- Python (tools/ble_sniff.py venv, if any) ---
+firmware/tools/__pycache__/
+*.pyc
+.venv/

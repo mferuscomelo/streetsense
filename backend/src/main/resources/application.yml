@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: streetsense-backend
+  threads:
+    virtual:
+      enabled: true # makes fork-per-subtask ingest (structured concurrency) cheap
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
