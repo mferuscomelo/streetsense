@@ -20,10 +20,13 @@ public class ReadingController {
 
     private final IngestService ingestService;
     private final ReadingRepository repository;
+    private final LiveFeedBroadcaster liveFeed;
 
-    public ReadingController(IngestService ingestService, ReadingRepository repository) {
+    public ReadingController(IngestService ingestService, ReadingRepository repository,
+                             LiveFeedBroadcaster liveFeed) {
         this.ingestService = ingestService;
         this.repository = repository;
+        this.liveFeed = liveFeed;
     }
 
     @PostMapping
@@ -39,8 +42,14 @@ public class ReadingController {
                 request.capturedAt());
 
         IngestResult result = ingestService.ingest(reading, request.contributorId());
+        ReadingView view = ReadingView.of(result.stored(), result.verdict());
 
-        return ResponseEntity.ok(ReadingView.of(result.stored(), result.verdict()));
+        // Fire-and-forget: a dashboard tab being open (or not) has no
+        // business affecting whether an ingest succeeds, so this can never
+        // become a reason the POST fails.
+        liveFeed.publish(view);
+
+        return ResponseEntity.ok(view);
     }
 
     @GetMapping("/recent")

@@ -48,6 +48,9 @@ class ReadingControllerTest {
     @MockitoBean
     private ReadingRepository repository;
 
+    @MockitoBean
+    private LiveFeedBroadcaster liveFeed;
+
     @Test
     void postReadingsReturnsDecodedVerdict() throws Exception {
         DecodedPacket packet = new DecodedPacket(1, true, 42, 8.3, 15.7, 19.2, 24.6, 134.5, 21.37, 52.80, 58.4);
