@@ -18,6 +18,10 @@ import io.streetsense.app.ble.BleScanner;
 import io.streetsense.app.ble.SensorNodeClient;
 import io.streetsense.app.ble.SensorPacket;
 import io.streetsense.app.location.LocationTagger;
+import io.streetsense.app.session.Activity;
+import io.streetsense.app.session.ContributorId;
+import io.streetsense.app.session.SessionRecorder;
+import io.streetsense.app.session.TracePoint;
 import io.streetsense.app.upload.ReadingUploader;
 
 /**
@@ -34,7 +38,7 @@ public final class MainActivity extends AppCompatActivity {
     // fail with CLEARTEXT_NOT_PERMITTED. Change both together.
     // For a USB-tethered test, run `adb reverse tcp:8080 tcp:8080` and use
     // "http://localhost:8080" instead — also already allowed by that config.
-    private static final String BACKEND_BASE_URL = "http://192.168.8.200:8080";
+    private static final String BACKEND_BASE_URL = "http://localhost:8080";
 
     private TextView statusText;
     private TextView mockBadge;
@@ -45,6 +49,8 @@ public final class MainActivity extends AppCompatActivity {
     private SensorNodeClient client;
     private LocationTagger locationTagger;
     private ReadingUploader uploader;
+    private final SessionRecorder session = new SessionRecorder();
+    private String contributorId;
 
     private boolean running = false;
     /** Guards against the repeated scan results that would otherwise open several GATT connections. */
@@ -82,6 +88,7 @@ public final class MainActivity extends AppCompatActivity {
 
         locationTagger = new LocationTagger(this);
         uploader = new ReadingUploader(BACKEND_BASE_URL);
+        contributorId = ContributorId.get(this);
 
         client = new SensorNodeClient(new SensorNodeClient.Listener() {
             @Override
@@ -120,6 +127,10 @@ public final class MainActivity extends AppCompatActivity {
 
     private void start() {
         running = true;
+        // Step 6 replaces this with a Run/Cycle/Walk picker. Until then WALK
+        // is the honest default: it is the lowest ventilation multiplier, so
+        // an unchosen activity under-reports dose rather than inflating it.
+        session.start(Activity.WALK);
         startStopButton.setText(R.string.action_stop);
         permissionLauncher.launch(new String[]{
                 Manifest.permission.BLUETOOTH_SCAN,
@@ -142,6 +153,7 @@ public final class MainActivity extends AppCompatActivity {
         scanner.stop();
         client.disconnect();
         locationTagger.stop();
+        session.stop();
         statusText.setText(R.string.status_idle);
     }
 
@@ -176,7 +188,16 @@ public final class MainActivity extends AppCompatActivity {
             return;
         }
         statusText.setText(R.string.status_connected);
-        uploader.upload(rawPacket, location);
+
+        // The precise fix goes to the local trace, for the session map only.
+        // The uploader snaps to a cell and sends that instead — see
+        // ReadingUploader for why the split lives on this side of the network.
+        session.record(new TracePoint(
+                location.getLatitude(), location.getLongitude(),
+                packet.pm2_5(), packet.noiseDb(), System.currentTimeMillis()));
+
+        uploader.upload(rawPacket, location,
+                session.sessionId(), contributorId, session.activity().name());
     }
 
     @Override
