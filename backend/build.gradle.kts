@@ -44,6 +44,13 @@ tasks.withType<Test> {
 
 tasks.named<BootRun>("bootRun") {
     jvmArgs("--enable-preview")
+    // `./gradlew bootRun -Pseed=true` — scripts/run-backend.sh --seed. Gradle
+    // doesn't forward -D system properties into the forked bootRun JVM on its
+    // own (that passthrough is a Spring Boot Maven plugin convention, not
+    // Gradle's), so this project property is the CLI entry point instead.
+    if (project.hasProperty("seed")) {
+        systemProperty("streetsense.seed.enabled", "true")
+    }
 }
 
 tasks.named<BootJar>("bootJar") {
