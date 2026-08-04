@@ -10,7 +10,8 @@ import android.widget.TextView;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AlertDialog;
+
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.Locale;
 import java.util.Map;
@@ -138,7 +139,7 @@ public final class MainActivity extends AppCompatActivity {
         // Activity.ventilationMultiplier on the backend), so the choice made
         // here is what makes the debrief's headline number meaningful rather
         // than an arbitrary guess.
-        new AlertDialog.Builder(this)
+        new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.activity_picker_title)
                 .setItems(R.array.activity_picker_options, (dialog, which) -> {
                     Activity[] options = {Activity.RUN, Activity.CYCLE, Activity.WALK};

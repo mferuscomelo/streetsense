@@ -1,0 +1,15 @@
+<!-- "Cells not traces" glyph: a 3x3 grid within the 66dp adaptive-icon safe zone,
+     one cell tinted to suggest a block reading differently from its neighbors. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#ffffff" android:pathData="M32,32h14v14h-14z" />
+    <path android:fillColor="#ffffff" android:pathData="M53,32h14v14h-14z" />
+    <path android:fillColor="#ffffff" android:pathData="M74,32h14v14h-14z" />
+    <path android:fillColor="#ffffff" android:pathData="M32,53h14v14h-14z" />
+    <path android:fillColor="#fab219" android:pathData="M53,53h14v14h-14z" />
+    <path android:fillColor="#ffffff" android:pathData="M74,53h14v14h-14z" />
+    <path android:fillColor="#ffffff" android:pathData="M32,74h14v14h-14z" />
+    <path android:fillColor="#ffffff" android:pathData="M53,74h14v14h-14z" />
+    <path android:fillColor="#ffffff" android:pathData="M74,74h14v14h-14z" />
+</vector>

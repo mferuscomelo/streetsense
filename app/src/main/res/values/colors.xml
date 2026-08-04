@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="surface">#fcfcfb</color>
+    <color name="page">#f9f9f7</color>
+    <color name="ink_primary">#0b0b0b</color>
+    <color name="ink_secondary">#52514e</color>
+    <color name="ink_muted">#898781</color>
+    <color name="gridline">#e1e0d9</color>
+
+    <color name="seq_100">#cde2fb</color>
+    <color name="seq_700">#0d366b</color>
+
+    <color name="status_good">#0ca30c</color>
+    <color name="status_warning">#fab219</color>
+    <color name="status_serious">#ec835a</color>
+    <color name="status_critical">#d03b3b</color>
+</resources>

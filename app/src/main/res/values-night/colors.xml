@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="surface">#1a1a19</color>
+    <color name="page">#0d0d0d</color>
+    <color name="ink_primary">#ffffff</color>
+    <color name="ink_secondary">#c3c2b7</color>
+    <color name="gridline">#2c2c2a</color>
+    <!-- ink_muted, seq_100/700, status_* are identical to the light values
+         in colors.xml and intentionally not redeclared here. -->
+</resources>

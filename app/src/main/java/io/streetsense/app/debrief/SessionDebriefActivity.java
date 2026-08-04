@@ -2,7 +2,6 @@ package io.streetsense.app.debrief;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -10,6 +9,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -130,10 +130,10 @@ public final class SessionDebriefActivity extends AppCompatActivity {
         map.getController().setCenter(new GeoPoint(last.lat(), last.lon()));
     }
 
-    private static int colorFor(double pm25) {
-        if (pm25 < PM_BAND_MODERATE) return Color.rgb(46, 160, 67);
-        if (pm25 < PM_BAND_HIGH) return Color.rgb(230, 159, 0);
-        return Color.rgb(213, 48, 48);
+    private int colorFor(double pm25) {
+        if (pm25 < PM_BAND_MODERATE) return ContextCompat.getColor(this, R.color.status_good);
+        if (pm25 < PM_BAND_HIGH) return ContextCompat.getColor(this, R.color.status_warning);
+        return ContextCompat.getColor(this, R.color.status_critical);
     }
 
     private void renderDebrief(JSONObject debrief) {
@@ -164,11 +164,22 @@ public final class SessionDebriefActivity extends AppCompatActivity {
     }
 
     private View eventRow(JSONObject event) {
-        TextView view = new TextView(this);
-        view.setPadding(0, 12, 0, 12);
-        view.setText(getString(R.string.debrief_event_row,
-                event.optString("headline", ""), event.optString("explanation", "")));
-        return view;
+        View row = getLayoutInflater().inflate(R.layout.item_debrief_event, eventsList, false);
+        row.findViewById(R.id.eventAccent).setBackgroundColor(accentColorFor(event.optString("type", "")));
+        ((TextView) row.findViewById(R.id.eventHeadline)).setText(event.optString("headline", ""));
+        ((TextView) row.findViewById(R.id.eventExplanation)).setText(event.optString("explanation", ""));
+        return row;
+    }
+
+    private int accentColorFor(String type) {
+        int colorRes = switch (type) {
+            case "TRAFFIC_PLUME" -> R.color.status_warning;
+            case "SOLVENT" -> R.color.status_serious;
+            case "SMOKE_OR_EXHAUST" -> R.color.status_critical;
+            case "NORMAL" -> R.color.status_good;
+            default -> R.color.ink_muted; // LOUD_BUT_CLEAN and any future/unknown type
+        };
+        return ContextCompat.getColor(this, colorRes);
     }
 
     private static String capitalize(String s) {

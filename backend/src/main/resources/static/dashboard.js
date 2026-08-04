@@ -17,6 +17,12 @@ const STATUS_COLOR = {
   LOUD_BUT_CLEAN: 'var(--ink-muted)',
 };
 
+// Cells snapshot and their on-map markers, kept module-level so a zoomend
+// resize can update marker icons in place instead of tearing everything down
+// (which would close any popup the user has open mid-zoom).
+let cellsData = [];
+let cellMarkers = [];
+
 function pmColor(meanPm25) {
   const t = Math.max(0, Math.min(1, meanPm25 / PM_SCALE_MAX));
   const r = Math.round(SEQ_LOW[0] + (SEQ_HIGH[0] - SEQ_LOW[0]) * t);
@@ -31,6 +37,24 @@ function cellBounds(cell) {
   const west = cell.lonBucket * CELL_SIZE_DEGREES;
   const east = west + CELL_SIZE_DEGREES;
   return [[south, west], [north, east]];
+}
+
+// Web Mercator's y-axis scales by sec(latitude) relative to x, so a cell's
+// true geographic bounds render taller than wide the further from the
+// equator you are — widening the longitude span to compensate would make
+// neighboring cells overlap. Instead, cells are drawn as fixed-pixel
+// squares: this measures the true north-south pixel span (latitude-correct,
+// longitude-independent) and reuses it as both the width and height.
+function cellPixelSize(map, cell) {
+  const bounds = cellBounds(cell);
+  const pSouth = map.latLngToContainerPoint(bounds[0]);
+  const pNorth = map.latLngToContainerPoint(bounds[1]);
+  return Math.max(2, Math.round(Math.abs(pNorth.y - pSouth.y)));
+}
+
+function cellCenter(cell) {
+  const bounds = cellBounds(cell);
+  return [(bounds[0][0] + bounds[1][0]) / 2, (bounds[0][1] + bounds[1][1]) / 2];
 }
 
 function formatHour(h) {
@@ -71,16 +95,8 @@ function buildPopup(cell) {
 }
 
 function renderCells(map, cells) {
-  for (const cell of cells) {
-    const rect = L.rectangle(cellBounds(cell), {
-      color: cell.confidence === 'CORROBORATED' ? 'var(--ink-primary)' : 'var(--ink-secondary)',
-      weight: cell.confidence === 'CORROBORATED' ? 2 : 1,
-      dashArray: cell.confidence === 'SINGLE_CONTRIBUTOR' ? '4 3' : null,
-      fillColor: pmColor(cell.meanPm2_5),
-      fillOpacity: cell.confidence === 'NO_DATA' ? 0.15 : cell.confidence === 'SINGLE_CONTRIBUTOR' ? 0.45 : 0.75,
-    }).addTo(map);
-    rect.bindPopup(buildPopup(cell));
-  }
+  cellsData = cells;
+  drawCellIcons(map, { forceRebuild: true });
 
   const stat = (id, value) => { document.getElementById(id).textContent = value; };
   stat('statCells', cells.length);
@@ -89,12 +105,47 @@ function renderCells(map, cells) {
   stat('statSeeded', cells.some(c => c.hasSeededData) ? 'yes' : 'no');
 }
 
+function drawCellIcons(map, { forceRebuild = false } = {}) {
+  const canUpdateInPlace = !forceRebuild && cellMarkers.length === cellsData.length;
+
+  if (!canUpdateInPlace) {
+    for (const marker of cellMarkers) map.removeLayer(marker);
+    cellMarkers = [];
+  }
+
+  cellsData.forEach((cell, i) => {
+    const size = cellPixelSize(map, cell);
+    const borderColor = cell.confidence === 'CORROBORATED' ? 'var(--ink-primary)' : 'var(--ink-secondary)';
+    const borderWidth = cell.confidence === 'CORROBORATED' ? 2 : 1;
+    const borderStyle = cell.confidence === 'SINGLE_CONTRIBUTOR' ? 'dashed' : 'solid';
+    const fillOpacity = cell.confidence === 'NO_DATA' ? 0.15 : cell.confidence === 'SINGLE_CONTRIBUTOR' ? 0.45 : 0.75;
+
+    const icon = L.divIcon({
+      className: 'cell-icon',
+      iconSize: [size, size],
+      iconAnchor: [size / 2, size / 2],
+      html: `<div style="width:${size}px;height:${size}px;box-sizing:border-box;`
+          + `background:${pmColor(cell.meanPm2_5)};opacity:${fillOpacity};`
+          + `border:${borderWidth}px ${borderStyle} ${borderColor};"></div>`,
+    });
+
+    if (canUpdateInPlace) {
+      cellMarkers[i].setIcon(icon);
+    } else {
+      const marker = L.marker(cellCenter(cell), { icon }).addTo(map);
+      marker.bindPopup(buildPopup(cell));
+      cellMarkers.push(marker);
+    }
+  });
+}
+
 function initMap() {
   const map = L.map('map', { scrollWheelZoom: false }).setView([49.0069, 8.4037], 15);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors',
     maxZoom: 19,
   }).addTo(map);
+  map.on('zoomend', () => drawCellIcons(map));
   return map;
 }
 

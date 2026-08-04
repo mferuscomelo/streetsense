@@ -48,5 +48,6 @@ dependencies {
     // SDK specifically to avoid an API key, a billing account, and
     // proprietary tile terms. See docs/attribution.md.
     implementation(libs.osmdroid)
+    implementation(libs.recyclerview)
     testImplementation(libs.junit)
 }

@@ -29,7 +29,6 @@
     <string name="debrief_map_unavailable">Map only available right after a session ends — this device never uploads a precise location, so a past session\'s route can\'t be reconstructed.</string>
     <string name="debrief_events_heading">What happened along the way</string>
     <string name="debrief_no_events">Nothing unusual — normal the whole way.</string>
-    <string name="debrief_event_row">%1$s — %2$s</string>
 
     <string name="history_empty">No sessions yet.</string>
 </resources>

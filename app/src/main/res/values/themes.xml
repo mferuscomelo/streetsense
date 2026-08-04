@@ -1,4 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.StreetSense" parent="Theme.MaterialComponents.DayNight.NoActionBar" />
+    <style name="Theme.StreetSense" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/ink_primary</item>
+        <item name="colorOnPrimary">@color/surface</item>
+        <item name="colorSecondary">@color/seq_700</item>
+        <item name="colorOnSecondary">@color/surface</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/ink_primary</item>
+        <item name="colorSurfaceVariant">@color/page</item>
+        <item name="colorOnSurfaceVariant">@color/ink_secondary</item>
+        <item name="colorOutline">@color/gridline</item>
+        <item name="colorError">@color/status_critical</item>
+        <item name="colorOnError">@color/surface</item>
+        <item name="android:colorBackground">@color/page</item>
+        <item name="colorOnBackground">@color/ink_primary</item>
+    </style>
 </resources>
