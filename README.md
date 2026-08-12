@@ -62,7 +62,7 @@ Two board environments share the same code; only the sensor source compiled in d
 ```sh
 scripts/run-firmware.sh test         # host-side packet + mock-source tests
 scripts/run-firmware.sh              # build env:ledglasses — mock sensor, always FLAG_MOCK_DATA
-scripts/run-firmware.sh build-sen54  # build env:ledglasses_sen54 — real SEN54 + PDM mic, compiles, not yet run on hardware
+scripts/run-firmware.sh build-sen54  # build env:ledglasses_sen54 — real SEN54 + PDM mic + MAX17048 battery
 scripts/run-firmware.sh flash        # upload whichever env you built (⚠️ erases the board's current firmware)
 scripts/run-firmware.sh monitor      # watch packets tick over serial
 ```
@@ -71,7 +71,7 @@ Equivalent to, respectively: `pio test -e native`, `pio run -e ledglasses`,
 `pio run -e ledglasses_sen54`, `pio run -t upload`, `pio device monitor` (run
 from `firmware/`, using `~/.platformio/penv/bin/pio` if it's not on `PATH`).
 
-`ledglasses` is the default and what the demo currently runs on. `ledglasses_sen54` is real and builds, but hasn't been verified against a physical SEN54 — see [`docs/future-work.md`](docs/future-work.md).
+`ledglasses` is the default and what the demo currently runs on. `ledglasses_sen54` runs real hardware — SEN54, PDM mic, and a MAX17048 fuel gauge — and has been verified end-to-end over BLE with `firmware/tools/ble_sniff.py`.
 
 ### backend
 
