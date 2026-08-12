@@ -26,7 +26,7 @@ backend has nowhere to put a coordinate even if it wanted to.
 
 ```
  ┌─────────────────┐   BLE notify    ┌────────────────────┐   HTTPS POST     ┌────────────────────┐
- │   firmware/      │  (20B packet,   │   app/              │  {rawPacket,     │   backend/          │
+ │   firmware/      │  (26B packet,   │   app/              │  {rawPacket,     │   backend/          │
  │  nRF52840 board  │──  1 Hz)  ─────▶│  Android, Java 17   │──  cell bucket, ─▶│  Spring Boot,       │
  │  (mock or SEN54) │                 │  session + BLE      │   session, hour}  │  Java 26            │
  └─────────────────┘                 └────────────────────┘                  └──────────┬──────────┘
