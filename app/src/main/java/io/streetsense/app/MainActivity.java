@@ -47,6 +47,7 @@ public final class MainActivity extends AppCompatActivity {
 
     private TextView statusText;
     private TextView mockBadge;
+    private TextView batteryBadge;
     private TextView readingsText;
     private Button startStopButton;
     private Button historyButton;
@@ -89,6 +90,7 @@ public final class MainActivity extends AppCompatActivity {
 
         statusText = findViewById(R.id.statusText);
         mockBadge = findViewById(R.id.mockBadge);
+        batteryBadge = findViewById(R.id.batteryBadge);
         readingsText = findViewById(R.id.readingsText);
         startStopButton = findViewById(R.id.startStopButton);
         historyButton = findViewById(R.id.historyButton);
@@ -207,6 +209,18 @@ public final class MainActivity extends AppCompatActivity {
     private void handlePacket(byte[] rawPacket) {
         SensorPacket packet = SensorPacket.parse(rawPacket);
         mockBadge.setVisibility(packet.mock() ? android.view.View.VISIBLE : android.view.View.GONE);
+
+        if (packet.batteryValid()) {
+            batteryBadge.setVisibility(android.view.View.VISIBLE);
+            batteryBadge.setText(getString(R.string.battery_status_format,
+                    packet.batterySoc(),
+                    packet.charging() ? getString(R.string.battery_charging_suffix) : ""));
+            batteryBadge.setTextColor(getColor(packet.charging()
+                    ? R.color.status_good
+                    : R.color.ink_secondary));
+        } else {
+            batteryBadge.setVisibility(android.view.View.GONE);
+        }
 
         readingsText.setText(String.format(Locale.US,
                 "seq %d%nPM2.5   %.1f ug/m3%nVOC     %.1f%ntemp    %.2f C%nhumidity %.2f %%RH%nnoise   %.1f dB(A)",

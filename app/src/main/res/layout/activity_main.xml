@@ -37,6 +37,15 @@
                 android:visibility="gone" />
 
             <TextView
+                android:id="@+id/batteryBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/ink_secondary"
+                android:textAppearance="?attr/textAppearanceLabelMedium"
+                android:visibility="gone" />
+
+            <TextView
                 android:id="@+id/readingsText"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
