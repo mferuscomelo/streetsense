@@ -17,9 +17,9 @@ import java.util.UUID;
 
 /**
  * Connects to a single StreetSense sensor node, enables notifications on
- * the sensor characteristic, and hands raw 20-byte packets back to the
- * caller on the main thread. GATT callbacks arrive on a Binder thread, so
- * every callback here hops to main before touching the listener.
+ * the sensor characteristic, and hands raw packets back to the caller on
+ * the main thread. GATT callbacks arrive on a Binder thread, so every
+ * callback here hops to main before touching the listener.
  */
 // See BleScanner: all entry points are gated behind granted BLE permissions
 // in MainActivity, so lint's requested checks would be unreachable duplicates.
@@ -31,6 +31,11 @@ public final class SensorNodeClient {
 
     private static final UUID CLIENT_CHARACTERISTIC_CONFIG_UUID =
             UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
+
+    // v2 packets are 26 bytes + 3-byte ATT header = 29; 64 leaves headroom
+    // for whatever the wire format grows into next without another
+    // renegotiation. See firmware/src/main.cpp's matching BANDWIDTH_MAX.
+    private static final int REQUESTED_MTU = 64;
 
     public enum State { CONNECTING, CONNECTED, DISCONNECTED }
 
@@ -68,10 +73,21 @@ public final class SensorNodeClient {
         @Override
         public void onConnectionStateChange(BluetoothGatt g, int status, int newState) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                g.discoverServices();
+                // Discovery must not race the MTU exchange, so it's deferred
+                // to onMtuChanged rather than fired here directly.
+                g.requestMtu(REQUESTED_MTU);
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 notifyState(State.DISCONNECTED);
             }
+        }
+
+        @Override
+        public void onMtuChanged(BluetoothGatt g, int mtu, int status) {
+            // Proceed even if the peer rejected the request (status != OK) —
+            // the connection still works at the default MTU, just truncating
+            // any packet wider than that; better than never discovering the
+            // service at all.
+            g.discoverServices();
         }
 
         @Override

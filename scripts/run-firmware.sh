@@ -4,11 +4,11 @@
 # = real SEN54, native = host-side tests, no board required).
 #
 # Usage:
-#   scripts/run-firmware.sh              # build (env:ledglasses) — default
-#   scripts/run-firmware.sh test         # host-side tests, no hardware
-#   scripts/run-firmware.sh build-sen54  # build env:ledglasses_sen54
-#   scripts/run-firmware.sh flash        # upload to whichever env you built (ERASES the board)
-#   scripts/run-firmware.sh monitor      # watch packets over serial
+#   scripts/run-firmware.sh                    # build (env:ledglasses) — default
+#   scripts/run-firmware.sh test               # host-side tests, no hardware
+#   scripts/run-firmware.sh build-sen54        # build env:ledglasses_sen54
+#   scripts/run-firmware.sh flash [env]        # upload env (default ledglasses_sen54; ERASES the board)
+#   scripts/run-firmware.sh monitor            # watch packets over serial
 
 set -euo pipefail
 
@@ -40,9 +40,10 @@ case "$cmd" in
     exec "$pio" run -e ledglasses_sen54
     ;;
   flash)
+    env="${2:-ledglasses_sen54}"
     echo "WARNING: this erases the board's current firmware."
-    echo "+ $pio run -t upload"
-    exec "$pio" run -t upload
+    echo "+ $pio run -e $env -t upload"
+    exec "$pio" run -e "$env" -t upload
     ;;
   monitor)
     echo "+ $pio device monitor"

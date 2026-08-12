@@ -12,6 +12,8 @@
     <string name="status_permissions_denied">Bluetooth permissions denied</string>
     <string name="status_needs_precise_location">Needs Precise location (not Approximate)</string>
     <string name="mock_badge">MOCK DATA</string>
+    <string name="battery_status_format">Battery %1$.0f%%%2$s</string>
+    <string name="battery_charging_suffix"> · charging</string>
     <string name="action_history">History</string>
 
     <string name="activity_picker_title">What are you doing?</string>

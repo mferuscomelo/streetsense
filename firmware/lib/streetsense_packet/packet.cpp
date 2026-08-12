@@ -16,7 +16,9 @@ static int16_t scale_i16(float value, float factor) {
 
 void encode_packet(const Reading& reading, uint16_t seq, StreetSensePacket& out) {
     out.version   = STREETSENSE_PACKET_VERSION;
-    out.flags     = reading.is_mock ? FLAG_MOCK_DATA : 0;
+    out.flags     = (reading.is_mock ? FLAG_MOCK_DATA : 0)
+                  | (reading.charging ? FLAG_CHARGING : 0)
+                  | (reading.battery_valid ? FLAG_BATTERY_VALID : 0);
     out.seq       = seq;
     out.pm1       = scale_u16(reading.pm1, 10.0f);
     out.pm2_5     = scale_u16(reading.pm2_5, 10.0f);
@@ -26,6 +28,12 @@ void encode_packet(const Reading& reading, uint16_t seq, StreetSensePacket& out)
     out.temp_c    = scale_i16(reading.temp_c, 100.0f);
     out.humidity  = scale_u16(reading.humidity, 100.0f);
     out.noise_db  = scale_u16(reading.noise_db, 10.0f);
+
+    // Zero rather than garbage when the gauge never produced a reading —
+    // FLAG_BATTERY_VALID is what tells a decoder whether these are real.
+    out.batt_mv   = reading.battery_valid ? scale_u16(reading.battery_volts, 1000.0f) : 0;
+    out.batt_soc  = reading.battery_valid ? scale_u16(reading.battery_soc, 10.0f) : 0;
+    out.batt_rate = reading.battery_valid ? scale_i16(reading.battery_rate, 10.0f) : 0;
 }
 
 void write_packet_bytes(const StreetSensePacket& packet, uint8_t* buf) {

@@ -4,12 +4,6 @@ Deliberately out of scope for slice 1. Listed here rather than left
 unstated, so the scope cuts read as decisions, not gaps.
 
 ## Hardware / firmware
-- **Verify the real SEN54 against physical hardware.** `Sen54SensorSource`
-  is implemented against Sensirion's own I2C driver and the onboard PDM mic
-  (`ledglasses_sen54` environment) and compiles, but has not yet been run on
-  the actual sensor — it's currently committed to another project. Flash
-  `ledglasses_sen54` and confirm real readings over `pio device monitor`
-  before treating it as more than "compiles."
 - **Motion tagging via the LIS3DH** — the onboard accelerometer (not a full
   IMU — see the root README) could flag readings taken while walking vs.
   stationary, which matters for noise readings especially.
