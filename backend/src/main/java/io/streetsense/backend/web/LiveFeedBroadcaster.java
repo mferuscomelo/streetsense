@@ -1,5 +1,7 @@
 package io.streetsense.backend.web;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -24,6 +26,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Component
 public class LiveFeedBroadcaster {
 
+    private static final Logger log = LoggerFactory.getLogger(LiveFeedBroadcaster.class);
+
     /** Long enough that a dashboard left open overnight doesn't need to reconnect hourly. */
     private static final Duration EMITTER_TIMEOUT = Duration.ofHours(4);
 
@@ -32,13 +36,23 @@ public class LiveFeedBroadcaster {
     public SseEmitter subscribe() {
         SseEmitter emitter = new SseEmitter(EMITTER_TIMEOUT.toMillis());
         emitters.add(emitter);
-        emitter.onCompletion(() -> emitters.remove(emitter));
-        emitter.onTimeout(() -> emitters.remove(emitter));
-        emitter.onError(e -> emitters.remove(emitter));
+        emitter.onCompletion(() -> {
+            emitters.remove(emitter);
+            log.debug("Live feed emitter completed, {} remaining", emitters.size());
+        });
+        emitter.onTimeout(() -> {
+            emitters.remove(emitter);
+            log.debug("Live feed emitter timed out, {} remaining", emitters.size());
+        });
+        emitter.onError(e -> {
+            emitters.remove(emitter);
+            log.debug("Live feed emitter errored ({}), {} remaining", e.toString(), emitters.size());
+        });
         return emitter;
     }
 
     public void publish(ReadingView reading) {
+        log.debug("Broadcasting reading id={} to {} live feed subscribers", reading.id(), emitters.size());
         for (SseEmitter emitter : emitters) {
             try {
                 emitter.send(SseEmitter.event()
@@ -48,6 +62,7 @@ public class LiveFeedBroadcaster {
                 // The client is gone; its own onError/onCompletion callback
                 // will remove it from `emitters` — nothing to do here beyond
                 // not letting one dead connection stop the others' sends.
+                log.debug("Failed to send to a live feed emitter: {}", e.toString());
             }
         }
     }
