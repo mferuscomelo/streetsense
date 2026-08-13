@@ -4,6 +4,8 @@ import io.streetsense.backend.domain.CellKey;
 import io.streetsense.backend.domain.CellStats;
 import io.streetsense.backend.domain.DecodedReading;
 import io.streetsense.backend.repository.ReadingRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -24,6 +26,8 @@ import java.util.stream.Gatherers;
  */
 @Component
 public class RollingBaseline {
+
+    private static final Logger log = LoggerFactory.getLogger(RollingBaseline.class);
 
     private static final int WINDOW = 5;
     private static final double EWMA_ALPHA = 0.3;
@@ -58,6 +62,8 @@ public class RollingBaseline {
         }
 
         cache.put(reading.key(), result);
+        log.debug("Baseline updated: cell={} sampleCount={} meanPm2_5={} stdDevPm2_5={}",
+                reading.cell(), result.sampleCount(), result.meanPm2_5(), result.stdDevPm2_5());
         return result;
     }
 }
