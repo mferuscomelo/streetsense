@@ -4,6 +4,8 @@ import io.streetsense.backend.domain.DecodedReading;
 import io.streetsense.backend.domain.Verdict;
 import io.streetsense.backend.repository.StoredReading;
 import io.streetsense.backend.web.VerdictView;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -24,6 +26,8 @@ import java.util.stream.Gatherers;
  */
 @Component
 public class SessionSummariser {
+
+    private static final Logger log = LoggerFactory.getLogger(SessionSummariser.class);
 
     /**
      * Readings per "worst stretch" window. At the node's 1 Hz that is half a
@@ -53,6 +57,12 @@ public class SessionSummariser {
         double meanPm = readings.stream().mapToDouble(DecodedReading::pm2_5).average().orElse(0);
         double meanNoise = readings.stream().mapToDouble(DecodedReading::noiseDb).average().orElse(0);
 
+        List<SessionDebrief.EventSummary> events = events(stored);
+        log.info("Session summarised: sessionId={} readings={} durationSec={} doseUg={} events={}",
+                first.sessionId(), readings.size(),
+                Duration.between(first.capturedAt(), last.capturedAt()).toSeconds(),
+                dose, events.size());
+
         return new SessionDebrief(
                 first.sessionId(),
                 first.contributorId(),
@@ -65,7 +75,7 @@ public class SessionSummariser {
                 meanPm,
                 meanNoise,
                 worstSegment(readings),
-                events(stored));
+                events);
     }
 
     private static SessionDebrief.Segment worstSegment(List<DecodedReading> readings) {
