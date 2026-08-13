@@ -89,6 +89,9 @@ public final class ConnectActivity extends AppCompatActivity implements SessionC
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_connect);
 
+        io.streetsense.app.ui.EdgeInsets.apply(findViewById(R.id.root),
+                findViewById(R.id.scrollContent), findViewById(R.id.bottomBar));
+
         View topBar = findViewById(R.id.topBar);
         ((TextView) topBar.findViewById(R.id.topBarTitle)).setText(R.string.connect_title);
         View backButton = topBar.findViewById(R.id.backButton);

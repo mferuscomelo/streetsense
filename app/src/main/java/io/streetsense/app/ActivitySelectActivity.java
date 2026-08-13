@@ -2,8 +2,10 @@ package io.streetsense.app;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,7 +22,7 @@ import io.streetsense.app.session.SessionController;
  */
 public final class ActivitySelectActivity extends AppCompatActivity {
 
-    private record Tile(MaterialCardView card, TextView label, TextView blurb, Activity activity) {}
+    private record Tile(MaterialCardView card, ImageView icon, TextView label, TextView blurb, Activity activity) {}
 
     private Tile[] tiles;
     private Activity selected;
@@ -31,19 +33,22 @@ public final class ActivitySelectActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_activity_select);
 
+        io.streetsense.app.ui.EdgeInsets.apply(findViewById(R.id.root),
+                findViewById(R.id.scrollContent), findViewById(R.id.bottomBar));
+
         View topBar = findViewById(R.id.topBar);
         ((TextView) topBar.findViewById(R.id.topBarTitle)).setText(R.string.activity_select_title);
         topBar.findViewById(R.id.batteryPill).setVisibility(View.GONE);
 
         tiles = new Tile[]{
-                new Tile(findViewById(R.id.tileWalking), findViewById(R.id.labelWalking),
-                        findViewById(R.id.blurbWalking), Activity.WALK),
-                new Tile(findViewById(R.id.tileJogging), findViewById(R.id.labelJogging),
-                        findViewById(R.id.blurbJogging), Activity.RUN),
-                new Tile(findViewById(R.id.tileCycling), findViewById(R.id.labelCycling),
-                        findViewById(R.id.blurbCycling), Activity.CYCLE),
-                new Tile(findViewById(R.id.tileDriving), findViewById(R.id.labelDriving),
-                        findViewById(R.id.blurbDriving), Activity.DRIVING),
+                new Tile(findViewById(R.id.tileWalking), findViewById(R.id.iconWalking),
+                        findViewById(R.id.labelWalking), findViewById(R.id.blurbWalking), Activity.WALK),
+                new Tile(findViewById(R.id.tileJogging), findViewById(R.id.iconJogging),
+                        findViewById(R.id.labelJogging), findViewById(R.id.blurbJogging), Activity.RUN),
+                new Tile(findViewById(R.id.tileCycling), findViewById(R.id.iconCycling),
+                        findViewById(R.id.labelCycling), findViewById(R.id.blurbCycling), Activity.CYCLE),
+                new Tile(findViewById(R.id.tileDriving), findViewById(R.id.iconDriving),
+                        findViewById(R.id.labelDriving), findViewById(R.id.blurbDriving), Activity.DRIVING),
         };
         for (Tile tile : tiles) {
             tile.card.setOnClickListener(v -> select(tile.activity));
@@ -74,12 +79,14 @@ public final class ActivitySelectActivity extends AppCompatActivity {
             if (isSelected) {
                 tile.card.setStrokeWidth(0);
                 tile.card.setCardBackgroundColor(getColor(R.color.color_primary));
+                tile.icon.setImageTintList(ColorStateList.valueOf(getColor(R.color.color_primary_foreground)));
                 tile.label.setTextColor(getColor(R.color.color_primary_foreground));
                 tile.blurb.setTextColor(getColor(R.color.color_primary_foreground));
                 tile.blurb.setAlpha(0.7f);
             } else {
                 tile.card.setStrokeWidth((int) (1 * getResources().getDisplayMetrics().density));
                 tile.card.setCardBackgroundColor(getColor(R.color.color_card));
+                tile.icon.setImageTintList(ColorStateList.valueOf(getColor(R.color.color_foreground)));
                 tile.label.setTextColor(getColor(R.color.color_foreground));
                 tile.blurb.setTextColor(getColor(R.color.color_muted_foreground));
                 tile.blurb.setAlpha(1f);

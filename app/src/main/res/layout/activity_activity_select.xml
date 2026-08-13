@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/color_background">
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollContent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
@@ -62,6 +64,7 @@
                         android:padding="16dp">
 
                         <ImageView
+                            android:id="@+id/iconWalking"
                             android:layout_width="28dp"
                             android:layout_height="28dp"
                             android:src="@drawable/ic_footprints"
@@ -110,6 +113,7 @@
                         android:padding="16dp">
 
                         <ImageView
+                            android:id="@+id/iconJogging"
                             android:layout_width="28dp"
                             android:layout_height="28dp"
                             android:src="@drawable/ic_jogging"
@@ -158,6 +162,7 @@
                         android:padding="16dp">
 
                         <ImageView
+                            android:id="@+id/iconCycling"
                             android:layout_width="28dp"
                             android:layout_height="28dp"
                             android:src="@drawable/ic_bicycle"
@@ -206,6 +211,7 @@
                         android:padding="16dp">
 
                         <ImageView
+                            android:id="@+id/iconDriving"
                             android:layout_width="28dp"
                             android:layout_height="28dp"
                             android:src="@drawable/ic_car"
@@ -239,6 +245,7 @@
     </androidx.core.widget.NestedScrollView>
 
     <FrameLayout
+        android:id="@+id/bottomBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
