@@ -4,6 +4,8 @@ import io.streetsense.backend.domain.CellKey;
 import io.streetsense.backend.domain.DecodedReading;
 import io.streetsense.backend.domain.GridCell;
 import io.streetsense.backend.repository.ReadingRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -35,6 +37,8 @@ import java.util.stream.Collectors;
 @Service
 public class CrowdService {
 
+    private static final Logger log = LoggerFactory.getLogger(CrowdService.class);
+
     /**
      * Marks a contributor generated to demonstrate the merge rather than
      * measured. Prefix rather than a flag on the reading because it survives
@@ -58,10 +62,12 @@ public class CrowdService {
                 .map(CellKey::cell)
                 .collect(Collectors.toSet());
 
-        return cells.stream()
+        List<CellSummary> view = cells.stream()
                 .map(this::summarise)
                 .sorted(Comparator.comparingInt(CellSummary::sampleCount).reversed())
                 .toList();
+        log.debug("City view assembled: {} cells", view.size());
+        return view;
     }
 
     public CellSummary summarise(GridCell cell) {
@@ -76,6 +82,8 @@ public class CrowdService {
                 .map(DecodedReading::contributorId)
                 .collect(Collectors.toSet());
         long seeded = contributors.stream().filter(CrowdService::isSeeded).count();
+        log.debug("Cell summarised: cell={} samples={} contributors={} seeded={}",
+                cell, all.size(), contributors.size(), seeded);
 
         return new CellSummary(
                 cell,
