@@ -5,6 +5,8 @@ import io.streetsense.backend.domain.DecodedReading;
 import io.streetsense.backend.domain.Evidence;
 import io.streetsense.backend.domain.Severity;
 import io.streetsense.backend.domain.Verdict;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
@@ -29,6 +31,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class AnomalyDetector {
 
+    private static final Logger log = LoggerFactory.getLogger(AnomalyDetector.class);
+
     private static final double ELEVATED_Z = 2.0;
     private static final double SPIKE_Z = 4.0;
     private static final int MIN_SAMPLES_FOR_VERDICT = 3;
@@ -36,12 +40,15 @@ public class AnomalyDetector {
 
     public Verdict check(DecodedReading reading, CellStats baseline) {
         if (baseline.sampleCount() < MIN_SAMPLES_FOR_VERDICT) {
+            log.debug("Baseline too thin for a verdict: cell={} sampleCount={}",
+                    reading.cell(), baseline.sampleCount());
             return new Verdict.Normal(baseline);
         }
 
         double zPm = zScore(reading.pm2_5(), baseline.meanPm2_5(), baseline.stdDevPm2_5());
         double zVoc = zScore(reading.vocIndex(), baseline.meanVoc(), baseline.stdDevVoc());
         double zNoise = zScore(reading.noiseDb(), baseline.meanNoiseDb(), baseline.stdDevNoiseDb());
+        log.debug("Z-scores: cell={} zPm={} zVoc={} zNoise={}", reading.cell(), zPm, zVoc, zNoise);
 
         boolean pmUp = zPm >= ELEVATED_Z;
         boolean vocUp = zVoc >= ELEVATED_Z;
@@ -56,16 +63,20 @@ public class AnomalyDetector {
         // Air first, then noise. Particulates and VOC describe what you are
         // breathing; noise rides along in the evidence either way and only
         // becomes the headline when the air itself is fine.
+        Verdict verdict;
         if (pmUp && vocUp) {
-            return new Verdict.SmokeOrExhaust(evidence, baseline);
+            verdict = new Verdict.SmokeOrExhaust(evidence, baseline);
+        } else if (pmUp) {
+            verdict = new Verdict.TrafficPlume(evidence, baseline);
+        } else if (vocUp) {
+            verdict = new Verdict.Solvent(evidence, baseline);
+        } else {
+            verdict = new Verdict.LoudButClean(evidence, baseline);
         }
-        if (pmUp) {
-            return new Verdict.TrafficPlume(evidence, baseline);
-        }
-        if (vocUp) {
-            return new Verdict.Solvent(evidence, baseline);
-        }
-        return new Verdict.LoudButClean(evidence, baseline);
+
+        log.info("Verdict raised: cell={} type={} severity={} peakZ={}",
+                reading.cell(), verdict.getClass().getSimpleName(), evidence.severity(), evidence.peakZ());
+        return verdict;
     }
 
     private static Severity severityOf(double zPm, double zVoc, double zNoise) {

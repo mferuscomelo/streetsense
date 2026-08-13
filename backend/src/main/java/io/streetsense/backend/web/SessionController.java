@@ -3,6 +3,8 @@ package io.streetsense.backend.web;
 import io.streetsense.backend.repository.ReadingRepository;
 import io.streetsense.backend.session.SessionDebrief;
 import io.streetsense.backend.session.SessionSummariser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,6 +29,8 @@ import java.util.List;
 @RequestMapping("/api/v1/sessions")
 public class SessionController {
 
+    private static final Logger log = LoggerFactory.getLogger(SessionController.class);
+
     private final ReadingRepository repository;
     private final SessionSummariser summariser;
 
@@ -39,6 +43,7 @@ public class SessionController {
     public ResponseEntity<SessionDebrief> debrief(@PathVariable String sessionId) {
         var readings = repository.forSession(sessionId);
         if (readings.isEmpty()) {
+            log.warn("Session debrief requested for unknown sessionId={}", sessionId);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
         return ResponseEntity.ok(summariser.summarise(readings));

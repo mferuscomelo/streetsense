@@ -3,6 +3,8 @@ package io.streetsense.backend.web;
 import io.streetsense.backend.crowd.CellSummary;
 import io.streetsense.backend.crowd.CrowdService;
 import io.streetsense.backend.domain.GridCell;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +24,8 @@ import java.util.List;
 @RequestMapping("/api/v1/cells")
 public class CellController {
 
+    private static final Logger log = LoggerFactory.getLogger(CellController.class);
+
     private final CrowdService crowd;
 
     public CellController(CrowdService crowd) {
@@ -30,11 +34,14 @@ public class CellController {
 
     @GetMapping
     public List<CellView> cityView() {
-        return crowd.cityView().stream().map(CellView::of).toList();
+        List<CellView> view = crowd.cityView().stream().map(CellView::of).toList();
+        log.debug("City view returned {} cells", view.size());
+        return view;
     }
 
     @GetMapping("/{latBucket}/{lonBucket}")
     public CellView cell(@PathVariable int latBucket, @PathVariable int lonBucket) {
+        log.debug("Cell lookup: latBucket={} lonBucket={}", latBucket, lonBucket);
         return CellView.of(crowd.summarise(new GridCell(latBucket, lonBucket)));
     }
 

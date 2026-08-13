@@ -6,6 +6,8 @@ import io.streetsense.backend.ingest.IngestService;
 import io.streetsense.backend.repository.ReadingRepository;
 import io.streetsense.backend.wire.DecodedPacket;
 import io.streetsense.backend.wire.PacketLayout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +19,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/readings")
 public class ReadingController {
+
+    private static final Logger log = LoggerFactory.getLogger(ReadingController.class);
 
     private final IngestService ingestService;
     private final ReadingRepository repository;
@@ -43,6 +47,7 @@ public class ReadingController {
 
         IngestResult result = ingestService.ingest(reading, request.contributorId());
         ReadingView view = ReadingView.of(result.stored(), result.verdict());
+        log.debug("Reading submitted: cell={} verdict={}", reading.cell(), view.verdict().type());
 
         // Fire-and-forget: a dashboard tab being open (or not) has no
         // business affecting whether an ingest succeeds, so this can never
@@ -54,7 +59,9 @@ public class ReadingController {
 
     @GetMapping("/recent")
     public List<ReadingView> recent(@RequestParam(defaultValue = "50") int limit) {
-        return repository.recent(limit).stream().map(ReadingView::of).toList();
+        List<ReadingView> views = repository.recent(limit).stream().map(ReadingView::of).toList();
+        log.debug("Returning {} recent readings (limit={})", views.size(), limit);
+        return views;
     }
 
     /**
@@ -66,6 +73,7 @@ public class ReadingController {
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> badRequest(IllegalArgumentException e) {
+        log.warn("Rejected malformed submission: {}", e.getMessage());
         return Map.of("error", e.getMessage());
     }
 }
