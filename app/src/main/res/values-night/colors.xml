@@ -1,10 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="surface">#1a1a19</color>
-    <color name="page">#0d0d0d</color>
-    <color name="ink_primary">#ffffff</color>
-    <color name="ink_secondary">#c3c2b7</color>
-    <color name="gridline">#2c2c2a</color>
-    <!-- ink_muted, seq_100/700, status_* are identical to the light values
-         in colors.xml and intentionally not redeclared here. -->
+    <!-- Design tokens — see docs/handoff/design-system.md (dark palette).
+         Band graphic colours are intentionally not redeclared: they're
+         identical in both themes. -->
+    <color name="color_background">#0C1015</color>
+    <color name="color_foreground">#F3F2ED</color>
+    <color name="color_card">#171B21</color>
+    <color name="color_surface_sunken">#13161C</color>
+    <color name="color_border">#1AFFFFFF</color>
+    <color name="color_primary">#F3F2ED</color>
+    <color name="color_primary_foreground">#12161C</color>
+    <color name="color_secondary">#20242B</color>
+    <color name="color_muted_foreground">#ADB1B9</color>
+    <color name="color_accent">#4C9DEB</color>
+    <color name="color_destructive">#ED5350</color>
+    <color name="color_background_transparent">#000C1015</color>
+
+    <color name="band_good_text">#64D6AF</color>
+    <color name="band_fair_text">#C6D973</color>
+    <color name="band_moderate_text">#FCC364</color>
+    <color name="band_poor_text">#FF9160</color>
+    <color name="band_severe_text">#FD717C</color>
 </resources>

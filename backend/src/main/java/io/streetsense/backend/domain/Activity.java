@@ -19,7 +19,8 @@ public enum Activity {
 
     WALK(2.0),
     CYCLE(4.0),
-    RUN(6.0);
+    RUN(6.0),
+    DRIVING(1.0);
 
     private final double ventilationMultiplier;
 

@@ -9,7 +9,7 @@
   app doesn't trust arbitrary plaintext endpoints:
     - 192.168.8.200 — the dev laptop over WiFi, for an untethered demo.
       If the laptop's LAN IP changes, update this AND
-      MainActivity.BACKEND_BASE_URL, or uploads silently stop.
+      StreetSenseApp.BACKEND_BASE_URL, or uploads silently stop.
     - localhost     — for `adb reverse tcp:8080 tcp:8080` over USB, which
       sidesteps firewall rules and DHCP reassignment entirely.
 -->

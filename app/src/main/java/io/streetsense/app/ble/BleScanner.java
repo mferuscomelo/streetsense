@@ -19,7 +19,7 @@ import java.util.UUID;
  * so we never see unrelated BLE peripherals. See docs/ble-protocol.md for
  * the UUID values — they must match firmware/src/ble_uuids.h exactly.
  */
-// MainActivity gates every entry point here behind a granted BLUETOOTH_SCAN /
+// ConnectActivity gates every entry point here behind a granted BLUETOOTH_SCAN /
 // BLUETOOTH_CONNECT request, so the permission checks lint asks for would be
 // unreachable duplicates. (Revoking a permission at runtime restarts the
 // process, so there's no live window where these calls run unpermitted.)

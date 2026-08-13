@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Type scale — see docs/handoff/design-system.md "Typography". -->
+
+    <style name="TextAppearance.StreetSense.ScreenTitle" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="fontFamily">@font/space_grotesk_family</item>
+        <item name="android:fontFamily">@font/space_grotesk_family</item>
+        <item name="android:textFontWeight" tools:targetApi="p">500</item>
+        <item name="android:textSize">30sp</item>
+        <item name="android:lineHeight" tools:targetApi="p">34.5sp</item>
+        <item name="android:letterSpacing">-0.02</item>
+        <item name="android:textColor">@color/color_foreground</item>
+    </style>
+
+    <style name="TextAppearance.StreetSense.Title" parent="TextAppearance.Material3.TitleLarge">
+        <item name="fontFamily">@font/space_grotesk_family</item>
+        <item name="android:fontFamily">@font/space_grotesk_family</item>
+        <item name="android:textFontWeight" tools:targetApi="p">500</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:lineHeight" tools:targetApi="p">25sp</item>
+        <item name="android:letterSpacing">-0.02</item>
+        <item name="android:textColor">@color/color_foreground</item>
+    </style>
+
+    <style name="TextAppearance.StreetSense.MetricXl" parent="TextAppearance.Material3.DisplayLarge">
+        <item name="fontFamily">@font/space_grotesk_family</item>
+        <item name="android:fontFamily">@font/space_grotesk_family</item>
+        <item name="android:textFontWeight" tools:targetApi="p">500</item>
+        <item name="android:textSize">60sp</item>
+        <item name="android:lineHeight" tools:targetApi="p">60sp</item>
+        <item name="android:letterSpacing">-0.02</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+        <item name="android:textColor">@color/color_foreground</item>
+    </style>
+
+    <style name="TextAppearance.StreetSense.MetricLg" parent="TextAppearance.Material3.DisplaySmall">
+        <item name="fontFamily">@font/space_grotesk_family</item>
+        <item name="android:fontFamily">@font/space_grotesk_family</item>
+        <item name="android:textFontWeight" tools:targetApi="p">500</item>
+        <item name="android:textSize">36sp</item>
+        <item name="android:lineHeight" tools:targetApi="p">37.8sp</item>
+        <item name="android:letterSpacing">-0.02</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+        <item name="android:textColor">@color/color_foreground</item>
+    </style>
+
+    <style name="TextAppearance.StreetSense.Metric" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="fontFamily">@font/space_grotesk_family</item>
+        <item name="android:fontFamily">@font/space_grotesk_family</item>
+        <item name="android:textFontWeight" tools:targetApi="p">500</item>
+        <item name="android:textSize">28sp</item>
+        <item name="android:lineHeight" tools:targetApi="p">30.8sp</item>
+        <item name="android:letterSpacing">-0.02</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+        <item name="android:textColor">@color/color_foreground</item>
+    </style>
+
+    <style name="TextAppearance.StreetSense.Body" parent="TextAppearance.Material3.BodyMedium">
+        <item name="fontFamily">@font/dm_sans_family</item>
+        <item name="android:fontFamily">@font/dm_sans_family</item>
+        <item name="android:textFontWeight" tools:targetApi="p">400</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:lineHeight" tools:targetApi="p">22.4sp</item>
+        <item name="android:textColor">@color/color_foreground</item>
+    </style>
+
+    <style name="TextAppearance.StreetSense.BodySm" parent="TextAppearance.Material3.BodySmall">
+        <item name="fontFamily">@font/dm_sans_family</item>
+        <item name="android:fontFamily">@font/dm_sans_family</item>
+        <item name="android:textFontWeight" tools:targetApi="p">400</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/color_muted_foreground</item>
+    </style>
+
+    <style name="TextAppearance.StreetSense.LabelCaps" parent="TextAppearance.Material3.LabelMedium">
+        <item name="fontFamily">@font/dm_sans_family</item>
+        <item name="android:fontFamily">@font/dm_sans_family</item>
+        <item name="android:textFontWeight" tools:targetApi="p">500</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/color_muted_foreground</item>
+    </style>
+
+    <style name="TextAppearance.StreetSense.Unit" parent="TextAppearance.Material3.LabelMedium">
+        <item name="fontFamily">@font/dm_sans_family</item>
+        <item name="android:fontFamily">@font/dm_sans_family</item>
+        <item name="android:textFontWeight" tools:targetApi="p">500</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/color_muted_foreground</item>
+    </style>
+</resources>
