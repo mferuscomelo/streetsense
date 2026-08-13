@@ -22,7 +22,7 @@ import java.util.UUID;
  * callback here hops to main before touching the listener.
  */
 // See BleScanner: all entry points are gated behind granted BLE permissions
-// in MainActivity, so lint's requested checks would be unreachable duplicates.
+// in ConnectActivity, so lint's requested checks would be unreachable duplicates.
 @SuppressLint("MissingPermission")
 public final class SensorNodeClient {
 

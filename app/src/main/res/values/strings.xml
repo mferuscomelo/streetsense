@@ -1,36 +1,147 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">StreetSense</string>
-    <string name="action_start">Start</string>
-    <string name="action_stop">Stop</string>
-    <string name="status_idle">Idle</string>
-    <string name="status_scanning">Scanning…</string>
-    <string name="status_connecting">Connecting…</string>
-    <string name="status_connected">Connected</string>
-    <string name="status_disconnected">Disconnected</string>
-    <string name="status_waiting_for_gps">Connected — waiting for GPS fix…</string>
-    <string name="status_permissions_denied">Bluetooth permissions denied</string>
-    <string name="status_needs_precise_location">Needs Precise location (not Approximate)</string>
-    <string name="mock_badge">MOCK DATA</string>
-    <string name="battery_status_format">Battery %1$.0f%%%2$s</string>
-    <string name="battery_charging_suffix"> · charging</string>
-    <string name="action_history">History</string>
 
-    <string name="activity_picker_title">What are you doing?</string>
-    <string-array name="activity_picker_options">
-        <item>Run</item>
-        <item>Cycle</item>
-        <item>Walk</item>
-    </string-array>
+    <!-- Shared shell -->
+    <string name="battery_pill_description">Module battery %1$d percent%2$s</string>
+    <string name="battery_pill_charging_suffix">, charging</string>
+    <string name="battery_pill_format">%1$d%%</string>
 
-    <string name="debrief_loading">Loading…</string>
-    <string name="debrief_load_failed">Couldn\'t load this session — is the backend reachable?</string>
-    <string name="debrief_title">%1$s · %2$s</string>
-    <string name="debrief_dose">%1$.2f µg of PM2.5 inhaled</string>
-    <string name="debrief_summary">Average %1$.1f µg/m³ PM2.5, %2$.1f dB(A)</string>
-    <string name="debrief_map_unavailable">Map only available right after a session ends — this device never uploads a precise location, so a past session\'s route can\'t be reconstructed.</string>
-    <string name="debrief_events_heading">What happened along the way</string>
-    <string name="debrief_no_events">Nothing unusual — normal the whole way.</string>
+    <!-- 1. Activity select -->
+    <string name="activity_select_title">StreetSense</string>
+    <string name="activity_select_headline">How are you\ntravelling today?</string>
+    <string name="activity_select_subtitle">Your activity sets the motion profile used to classify IMU data and scales the exposure model for the session.</string>
+    <string name="activity_walking_label">Walking</string>
+    <string name="activity_walking_blurb">Footpath pace, pavement-level air</string>
+    <string name="activity_jogging_label">Jogging</string>
+    <string name="activity_jogging_blurb">Higher breathing rate, higher exposure</string>
+    <string name="activity_cycling_label">Cycling</string>
+    <string name="activity_cycling_blurb">Road-side, in the traffic stream</string>
+    <string name="activity_driving_label">Driving</string>
+    <string name="activity_driving_blurb">Cabin air, corridor-scale coverage</string>
+    <string name="action_continue">Continue</string>
 
-    <string name="history_empty">No sessions yet.</string>
+    <!-- 2. Connect -->
+    <string name="connect_title">Module</string>
+    <string name="connect_state_idle_title">Not connected</string>
+    <string name="connect_state_idle_detail">Power on your StreetSense module to begin.</string>
+    <string name="connect_state_searching_title">Searching</string>
+    <string name="connect_state_searching_detail">Looking for nearby StreetSense modules…</string>
+    <string name="connect_state_connecting_title">Connecting</string>
+    <string name="connect_state_connecting_detail">Pairing and reading the sensor profile…</string>
+    <string name="connect_state_connected_title">Connected</string>
+    <string name="connect_state_connected_detail">Live data stream established.</string>
+    <string name="connect_state_disconnected_title">Disconnected</string>
+    <string name="connect_state_disconnected_detail">The module went out of range.</string>
+    <string name="connect_state_error_title">Couldn\'t connect</string>
+    <string name="connect_state_error_detail">The module didn\'t respond. Try again.</string>
+    <string name="connect_state_reconnecting_title">Reconnecting</string>
+    <string name="connect_state_reconnecting_detail">Trying to re-pair with the module…</string>
+
+    <string name="step_scan">Scan</string>
+    <string name="step_pair">Pair</string>
+    <string name="step_stream">Stream</string>
+
+    <string name="device_firmware_chip">fw %1$s</string>
+    <string name="device_stat_battery_label">Battery</string>
+    <string name="device_stat_signal_label">Signal</string>
+    <string name="device_stat_sensor_label">Sensor</string>
+    <string name="device_stat_sensor_value">SEN54</string>
+    <string name="device_warming_up">SEN54 warming up — first readings settle after about 8 s.</string>
+    <string name="device_dropped">The link to %1$s dropped. Recording is paused; readings resume automatically once the module is back in range.</string>
+
+    <string name="error_not_found_title">No module found</string>
+    <string name="error_not_found_detail">Nothing advertising as StreetSense was in range.</string>
+    <string name="error_not_found_hint_1">Check the module is powered on and the LED is pulsing blue</string>
+    <string name="error_not_found_hint_2">Keep the module within about 10 m of the phone</string>
+    <string name="error_not_found_hint_3">Make sure it is not still paired to another phone</string>
+
+    <string name="error_timeout_title">Pairing timed out</string>
+    <string name="error_timeout_detail">The module was found but stopped responding during pairing.</string>
+    <string name="error_timeout_hint_1">Move closer and try again</string>
+    <string name="error_timeout_hint_2">Power-cycle the module</string>
+    <string name="error_timeout_hint_3">Turn Bluetooth off and on</string>
+
+    <string name="error_sensor_title">Sensor not reporting</string>
+    <string name="error_sensor_detail">Paired, but the SEN54 did not return a reading.</string>
+    <string name="error_sensor_hint_1">Check the sensor ribbon cable is seated</string>
+    <string name="error_sensor_hint_2">Restart the module</string>
+    <string name="error_sensor_hint_3">Update firmware to 1.4.2 or later</string>
+    <string name="error_what_to_check">What to check</string>
+
+    <string name="error_bluetooth_off_title">Bluetooth is off</string>
+    <string name="error_bluetooth_off_detail">Turn on Bluetooth to search for a module.</string>
+    <string name="error_bluetooth_off_hint_1">Open Quick Settings and turn Bluetooth on</string>
+    <string name="error_bluetooth_off_hint_2">Then come back and try again</string>
+
+    <string name="error_permission_denied_title">Bluetooth permission needed</string>
+    <string name="error_permission_denied_detail">StreetSense needs Bluetooth and location permission to find and connect to a module.</string>
+    <string name="error_permission_denied_hint_1">Open Settings → Apps → StreetSense → Permissions</string>
+    <string name="error_permission_denied_hint_2">Allow Nearby devices and Location (Precise)</string>
+    <string name="error_permission_denied_hint_3">Then come back and try again</string>
+    <string name="action_open_settings">Open settings</string>
+    <string name="action_turn_on_bluetooth">Turn on Bluetooth</string>
+
+    <string name="action_scanning">Scanning…</string>
+    <string name="action_pairing">Pairing…</string>
+    <string name="action_try_again">Try again</string>
+    <string name="action_search_for_module">Search for module</string>
+    <string name="action_warming_up_sensor">Warming up sensor…</string>
+    <string name="action_start_session_format">Start %1$s session</string>
+
+    <string name="caption_module_required">A connected module is required to start recording.</string>
+    <string name="caption_warming_up">The SEN54 needs a few seconds before readings are reliable.</string>
+    <string name="caption_module_ready">Module connected and ready.</string>
+
+    <!-- 3. Live session -->
+    <string name="session_title">Session</string>
+    <string name="status_running_format">%1$s</string>
+    <string name="status_paused">PAUSED</string>
+
+    <string name="banner_connection_lost_title">Connection lost</string>
+    <string name="banner_connection_lost_detail">Recording is paused. Reconnect to keep collecting data.</string>
+    <string name="banner_disconnected_title">Module disconnected</string>
+    <string name="banner_disconnected_detail">Move back into range to resume recording.</string>
+    <string name="banner_reconnecting_title">Reconnecting to module</string>
+    <string name="banner_reconnecting_detail">Recording paused — values below are the last received.</string>
+    <string name="banner_warming_up_title">SEN54 warming up</string>
+    <string name="banner_warming_up_detail">Particle readings stabilise a few seconds after power-on.</string>
+    <string name="action_retry">Retry</string>
+
+    <string name="reading_content_description">%1$s, %2$s %3$s. Open chart.</string>
+    <string name="map_metric_pm25">PM2.5</string>
+    <string name="map_metric_pm10">PM10</string>
+    <string name="map_metric_noise">Noise</string>
+    <string name="map_unavailable">GPS unavailable — route will appear once a fix is found.</string>
+
+    <string name="action_pause">Pause</string>
+    <string name="action_resume">Resume</string>
+    <string name="action_finish">Finish</string>
+
+    <!-- 4. Metric sheet -->
+    <string name="range_1min">1 min</string>
+    <string name="range_5min">5 min</string>
+    <string name="range_session">Session</string>
+    <string name="tooltip_elapsed_format">%1$s into range</string>
+    <string name="stat_min">Min</string>
+    <string name="stat_avg">Avg</string>
+    <string name="stat_max">Max</string>
+
+    <string name="about_pm25">Fine particulate matter under 2.5 µm — the fraction that reaches deep into the lungs.</string>
+    <string name="about_pm10">Coarse particulate matter under 10 µm — road dust, brake and tyre wear.</string>
+    <string name="about_pm1">Ultrafine particles under 1 µm, dominated by combustion sources.</string>
+    <string name="about_pm4">Respirable particulate mass under 4 µm.</string>
+    <string name="about_noise">A-weighted sound pressure level measured by the module microphone.</string>
+    <string name="about_voc">Sensirion VOC Index, 1–500. 100 is the running average of your recent environment.</string>
+    <string name="about_temp">Ambient temperature from the SEN54 humidity/temperature element.</string>
+    <string name="about_humidity">Relative humidity from the SEN54 humidity/temperature element.</string>
+
+    <!-- 5. Summary -->
+    <string name="summary_title">Summary</string>
+    <string name="summary_session_heading_format">%1$s SESSION</string>
+    <string name="summary_distance_samples_format">%1$s km · %2$d samples</string>
+    <string name="summary_avg_pm25_caption">avg PM2.5 µg/m³</string>
+    <string name="summary_peak_format">peak %1$s</string>
+    <string name="summary_footnote">Tap any metric for its full session graph. Readings from this session have already been uploaded to the shared dataset; this on-device summary is cleared once you tap Done.</string>
+    <string name="action_done">Done</string>
 </resources>
