@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Body font — see docs/handoff/design-system.md. Variable font (opsz,wght
+     axes); each weight below pins the 'wght' axis on the same physical file. -->
+<font-family xmlns:app="http://schemas.android.com/apk/res-auto">
+    <font
+        app:font="@font/dm_sans"
+        app:fontStyle="normal"
+        app:fontWeight="400"
+        app:fontVariationSettings="'wght' 400" />
+    <font
+        app:font="@font/dm_sans"
+        app:fontStyle="normal"
+        app:fontWeight="500"
+        app:fontVariationSettings="'wght' 500" />
+</font-family>

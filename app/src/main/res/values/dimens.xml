@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Spacing — see docs/handoff/design-system.md "Spacing and shape". -->
+    <dimen name="space_gutter">20dp</dimen>
+    <dimen name="space_stack">12dp</dimen>
+    <dimen name="space_section">32dp</dimen>
+    <dimen name="card_padding">16dp</dimen>
+    <dimen name="card_padding_compact">12dp</dimen>
+    <dimen name="panel_padding">20dp</dimen>
+    <dimen name="content_max_width">448dp</dimen>
+    <dimen name="min_touch_target">44dp</dimen>
+
+    <!-- Shape -->
+    <dimen name="radius_card">28dp</dimen>
+    <dimen name="radius_panel">32dp</dimen>
+    <dimen name="radius_well">24dp</dimen>
+    <dimen name="radius_stadium">999dp</dimen>
+
+    <!-- Status disc on the Connect screen -->
+    <dimen name="status_disc_outer">128dp</dimen>
+    <dimen name="status_disc_inner">80dp</dimen>
+    <dimen name="status_disc_icon">32dp</dimen>
+
+    <!-- Sparkline heights -->
+    <dimen name="sparkline_hero">56dp</dimen>
+    <dimen name="sparkline_duo">22dp</dimen>
+    <dimen name="sparkline_compact">18dp</dimen>
+    <dimen name="metric_sheet_chart_height">208dp</dimen>
+</resources>
