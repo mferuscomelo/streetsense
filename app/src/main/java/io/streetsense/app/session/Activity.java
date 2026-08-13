@@ -12,5 +12,6 @@ package io.streetsense.app.session;
 public enum Activity {
     WALK,
     CYCLE,
-    RUN
+    RUN,
+    DRIVING
 }

@@ -41,7 +41,10 @@ public class SensorPacketTest {
         assertEquals(1, packet.version());
         assertTrue(packet.mock());
         assertEquals(42, packet.seq());
+        assertEquals(8.3, packet.pm1(), 1e-9);
         assertEquals(15.7, packet.pm2_5(), 1e-9);
+        assertEquals(19.2, packet.pm4(), 1e-9);
+        assertEquals(24.6, packet.pm10(), 1e-9);
         assertEquals(134.5, packet.vocIndex(), 1e-9);
         assertEquals(21.37, packet.tempC(), 1e-9);
         assertEquals(52.80, packet.humidity(), 1e-9);
@@ -56,7 +59,10 @@ public class SensorPacketTest {
         assertEquals(2, packet.version());
         assertTrue(packet.mock());
         assertEquals(42, packet.seq());
+        assertEquals(8.3, packet.pm1(), 1e-9);
         assertEquals(15.7, packet.pm2_5(), 1e-9);
+        assertEquals(19.2, packet.pm4(), 1e-9);
+        assertEquals(24.6, packet.pm10(), 1e-9);
         assertEquals(58.4, packet.noiseDb(), 1e-9);
         assertTrue(packet.batteryValid());
         assertTrue(packet.charging());

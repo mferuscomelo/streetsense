@@ -4,12 +4,10 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 /**
- * Decodes the subset of the StreetSensePacket wire format the app actually
- * displays. The full record — including PM1/PM4/PM10, which this app never
- * shows — is decoded authoritatively by the backend via FFM; this app
- * forwards the raw bytes verbatim rather than re-deriving the complete
- * record, so a packet with fields newer than this parser knows about still
- * relays correctly.
+ * Decodes the StreetSensePacket wire format. The backend also decodes the
+ * full record authoritatively via FFM; this app forwards the raw bytes
+ * verbatim rather than re-deriving the complete record, so a packet with
+ * fields newer than this parser knows about still relays correctly.
  *
  * Accepts both the 20-byte v1 layout (no battery telemetry, batteryValid
  * always false) and the 26-byte v2 layout. Layout mirrors
@@ -20,7 +18,10 @@ public record SensorPacket(
         int version,
         boolean mock,
         int seq,
+        double pm1,
         double pm2_5,
+        double pm4,
+        double pm10,
         double vocIndex,
         double tempC,
         double humidity,
@@ -47,10 +48,10 @@ public record SensorPacket(
         int version = buf.get() & 0xFF;
         int flags = buf.get() & 0xFF;
         int seq = buf.getShort() & 0xFFFF;
-        buf.getShort(); // pm1 — not displayed by this app
+        int pm1Raw = buf.getShort() & 0xFFFF;
         int pm2_5Raw = buf.getShort() & 0xFFFF;
-        buf.getShort(); // pm4 — not displayed by this app
-        buf.getShort(); // pm10 — not displayed by this app
+        int pm4Raw = buf.getShort() & 0xFFFF;
+        int pm10Raw = buf.getShort() & 0xFFFF;
         int vocRaw = buf.getShort() & 0xFFFF;
         int tempRaw = buf.getShort(); // signed
         int humidityRaw = buf.getShort() & 0xFFFF;
@@ -72,7 +73,10 @@ public record SensorPacket(
                 version,
                 (flags & FLAG_MOCK_DATA) != 0,
                 seq,
+                pm1Raw / 10.0,
                 pm2_5Raw / 10.0,
+                pm4Raw / 10.0,
+                pm10Raw / 10.0,
                 vocRaw / 10.0,
                 tempRaw / 100.0,
                 humidityRaw / 100.0,
