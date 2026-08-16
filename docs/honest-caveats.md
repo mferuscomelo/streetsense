@@ -59,7 +59,11 @@ to be discovered.
   - The `~110m` cell size is a deliberate trade, not an arbitrary constant:
     finer cells give better route resolution but weaker anonymity; coarser
     cells give better anonymity but can't distinguish one street from the
-    next. See the constant's own documentation in `GridCell.java`.
+    next. See the constant's own documentation in `GridCell.java`. A cell is
+    `~110m` on a side at any latitude, not just at the equator — the
+    longitude bucket widens by `1 / cos(latitude)` so real-world cell width
+    keeps pace with latitude's fixed ~110m instead of shrinking toward the
+    poles.
 - **Contributor identity is a random per-install id, not a device or
   account identifier.** `app/.../session/ContributorId.java` generates a
   UUID stored in app-local preferences, not `ANDROID_ID`, not an

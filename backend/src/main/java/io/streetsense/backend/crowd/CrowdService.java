@@ -101,7 +101,13 @@ public class CrowdService {
         return contributorId != null && contributorId.startsWith(SEEDED_PREFIX);
     }
 
-    private Map<Integer, List<DecodedReading>> readingsByHour(GridCell cell) {
+    /**
+     * Package-visible so {@link CellDetailService} can reuse the same
+     * (cell, hour) scan instead of duplicating it — {@link #summarise} folds
+     * this down to two means and discards the rest, which is exactly the
+     * raw material a per-cell detail view needs back.
+     */
+    Map<Integer, List<DecodedReading>> readingsByHour(GridCell cell) {
         Map<Integer, List<DecodedReading>> byHour = new LinkedHashMap<>();
         for (int hour = 0; hour < 24; hour++) {
             List<DecodedReading> readings = repository.recentForKey(new CellKey(cell, hour), PER_HOUR_LIMIT);

@@ -1,5 +1,7 @@
 package io.streetsense.backend.web;
 
+import io.streetsense.backend.crowd.CellDetail;
+import io.streetsense.backend.crowd.CellDetailService;
 import io.streetsense.backend.crowd.CellSummary;
 import io.streetsense.backend.crowd.CrowdService;
 import io.streetsense.backend.domain.GridCell;
@@ -27,9 +29,11 @@ public class CellController {
     private static final Logger log = LoggerFactory.getLogger(CellController.class);
 
     private final CrowdService crowd;
+    private final CellDetailService detailService;
 
-    public CellController(CrowdService crowd) {
+    public CellController(CrowdService crowd, CellDetailService detailService) {
         this.crowd = crowd;
+        this.detailService = detailService;
     }
 
     @GetMapping
@@ -43,6 +47,17 @@ public class CellController {
     public CellView cell(@PathVariable int latBucket, @PathVariable int lonBucket) {
         log.debug("Cell lookup: latBucket={} lonBucket={}", latBucket, lonBucket);
         return CellView.of(crowd.summarise(new GridCell(latBucket, lonBucket)));
+    }
+
+    /**
+     * The dashboard's cell click-through: full pollutant breakdown, an
+     * hourly time series, and the sessions that passed through this block —
+     * everything {@link #cell} doesn't have room for.
+     */
+    @GetMapping("/{latBucket}/{lonBucket}/detail")
+    public CellDetailView detail(@PathVariable int latBucket, @PathVariable int lonBucket) {
+        log.debug("Cell detail lookup: latBucket={} lonBucket={}", latBucket, lonBucket);
+        return CellDetailView.of(detailService.detail(new GridCell(latBucket, lonBucket)));
     }
 
     /**
@@ -71,6 +86,28 @@ public class CellController {
                     s.hasSeededData(), s.confidence().name(),
                     s.meanPm2_5(), s.meanNoiseDb(),
                     s.cleanestHour(), s.quietestHour(), s.mock());
+        }
+    }
+
+    /**
+     * Flattens {@link CellDetail} for JSON. {@code summary} reuses
+     * {@link CellView} as-is (same confidence/seeded-data obligations apply
+     * here as on the city view); {@code means}, {@code hourly}, and
+     * {@code sessions} are already flat records, serialized directly.
+     */
+    public record CellDetailView(
+            int latBucket,
+            int lonBucket,
+            CellView summary,
+            CellDetail.PollutantMeans means,
+            List<CellDetail.HourlyBucket> hourly,
+            List<CellDetail.RelatedSession> sessions) {
+
+        static CellDetailView of(CellDetail d) {
+            return new CellDetailView(
+                    d.cell().latBucket(), d.cell().lonBucket(),
+                    CellView.of(d.summary()),
+                    d.means(), d.hourly(), d.sessions());
         }
     }
 }

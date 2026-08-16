@@ -116,7 +116,7 @@ class ReadingControllerTest {
                 .andExpect(jsonPath("$.lat").doesNotExist())
                 .andExpect(jsonPath("$.lon").doesNotExist())
                 .andExpect(jsonPath("$.cell.latBucket").value(49006))
-                .andExpect(jsonPath("$.cell.lonBucket").value(8403))
+                .andExpect(jsonPath("$.cell.lonBucket").value(5507))
                 .andExpect(jsonPath("$.hourOfDay").value(12));
     }
 

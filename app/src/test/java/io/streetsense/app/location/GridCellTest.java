@@ -20,9 +20,9 @@ public class GridCellTest {
 
     @Test
     public void goldenCoordinatesBucketAsTheBackendDoes() {
-        assertBucket(49.0069, 8.4037, 49006, 8403);      // Karlsruhe
-        assertBucket(51.5074, -0.1278, 51507, -128);     // London, west of the meridian
-        assertBucket(-33.8688, 151.2093, -33869, 151209); // Sydney, southern hemisphere
+        assertBucket(49.0069, 8.4037, 49006, 5507);      // Karlsruhe
+        assertBucket(51.5074, -0.1278, 51507, -80);      // London, west of the meridian
+        assertBucket(-33.8688, 151.2093, -33869, 125579); // Sydney, southern hemisphere
     }
 
     @Test
