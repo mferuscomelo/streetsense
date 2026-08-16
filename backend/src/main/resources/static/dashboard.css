@@ -583,6 +583,7 @@ table.feed-table th {
 .panel-body {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: var(--panel-padding);
   display: flex;
   flex-direction: column;

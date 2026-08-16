@@ -542,7 +542,15 @@ function buildHeroChart(points, meta) {
     tooltip.textContent = `${formatHour(nearest.hour)} · ${formatValue(nearest.value, meta.decimals)} ${meta.unit} · `
         + `${nearest.sampleCount} reading${nearest.sampleCount === 1 ? '' : 's'}, `
         + `${nearest.contributorCount} contributor${nearest.contributorCount === 1 ? '' : 's'}`;
-    tooltip.style.left = `${(cx / width) * 100}%`;
+
+    // Positioned in px, clamped to the chart's own rendered width, rather
+    // than a %-of-container + translate(-50%) — the tooltip's width varies
+    // with its text, and near either edge of the 24h chart that centered
+    // placement pushed it past the panel's edge, where it got truncated.
+    const idealLeftPx = (cx / width) * rect.width;
+    const halfTooltipWidth = tooltip.offsetWidth / 2;
+    const clampedLeftPx = Math.min(Math.max(idealLeftPx, halfTooltipWidth), rect.width - halfTooltipWidth);
+    tooltip.style.left = `${clampedLeftPx}px`;
     tooltip.style.top = `${(cy / height) * 100}%`;
     tooltip.style.opacity = '1';
   });
