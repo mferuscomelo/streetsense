@@ -84,6 +84,16 @@ this simple was deliberate: the only job it has is packing sensor values
 into a fixed size packet, so there is nothing here that can drift out of
 sync with what the app or the backend thinks a reading means.
 
+![The sensor node's 3D printed case, designed in Onshape, showing the SEN54's inlet and fan outlet openings](docs/images/case.png)
+
+The case is 3D printed and designed in Onshape alongside the internal
+layout, with two separate openings for the SEN54 rather than one: the round
+hole is the fan outlet, and the rectangular slot next to it is the air
+inlet. Keeping them apart matters, Sensirion's own design guidance for this
+sensor calls for the inlet and outlet to be sealed off from each other, so
+outgoing air can't get pulled straight back in and thrown off the next
+reading.
+
 ### Hardware
 
 | Component                                                                      | Role                                                                                                                                                                                                                                                                     | Protocol                                                                                                                                                                                                  |
