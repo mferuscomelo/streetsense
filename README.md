@@ -1,29 +1,8 @@
 # StreetSense
 
-*A submission for Hackster.io's [Modern Java in the Wild](https://www.hackster.io/contests/modern-java-in-the-wild) contest, sponsored by Avnet and Oracle. Category: Best Health Solution.*
+*A submission for Hackster.io's [Modern Java in the Wild](https://www.hackster.io/contests/modern-java-in-the-wild) contest, sponsored by Avnet and Oracle.*
 
 Know what you're breathing, everywhere you go, not just at home.
-
-**[ADD PHOTO: the assembled sensor node goes here before you submit]**
-
-[streetsense.tech](https://streetsense.tech/) has more on where this project is headed, plus a waitlist if you would like early access.
-
-The backend is where this project earns its place in a Java contest. It
-runs on Java 26 and leans on preview features that only exist in this one
-release, not just a version number bump. See the Backend section below for
-what that actually buys, feature by feature.
-
-## Things used in this project
-
-- Adafruit LED Glasses Driver, nRF52840 (the sensor node's MCU, BLE radio,
-  onboard PDM microphone, and onboard accelerometer)
-- Sensirion SEN54 (particulate matter, VOC, temperature, and humidity sensor)
-- Adafruit MAX17048 fuel gauge (battery monitor)
-- A 2500 mAh, 3.7V LiPo battery
-- An Android phone (a real one, BLE doesn't work in an emulator)
-- PlatformIO and C++ for the firmware
-- Android and Java 17 for the app
-- Spring Boot and Java 26 for the backend
 
 ## The story
 
@@ -263,11 +242,36 @@ instead of a library doing it for them.
 
 ## Dashboard
 
-The dashboard is served straight off the backend, with no separate service
-sitting in between, and it is the live public face of the crowd layer. It
-renders every grid cell on a map, colored and sized by how much data backs
-it up, so a cell one person sampled once looks visibly different from one a
-dozen people agree on.
+The dashboard is served straight off the backend, with no separate service,
+build step, or framework sitting in between: the same vanilla HTML, CSS, and
+JavaScript that keeps the backend's own dependency list short, just applied
+to the frontend half of the project too. It is the live public face of the
+crowd layer, a fullscreen branded map that renders every grid cell colored
+and sized by how much data backs it up, so a block one person sampled once
+looks visibly different from one a dozen people agree on.
+
+![The StreetSense dashboard: a fullscreen map of Karlsruhe tiled edge to edge with grid cells, and a cell detail panel open on the right showing pollutant readings, a PM2.5 chart, and session history](docs/images/dashboard.png)
+
+Confidence is drawn, not just labeled. A corroborated cell, the common case
+across most of the grid, gets a solid hairline border and fills in at 50%
+opacity; a single-contributor cell is still worth flagging as provisional,
+so it keeps a dashed, more visible edge at a lighter 30%. Cells tile
+edge-to-edge with no gaps between them, which took its own fix: a naive grid
+stretches into rectangles away from the equator, since a degree of longitude
+covers less real-world distance than a degree of latitude the further north
+or south you go. Each cell's longitude span is widened by the same secant
+correction Web Mercator's own projection applies, so a block reads as a true
+square in real-world metres and, because that projection is conformal, in
+pixels too, at any zoom level.
+
+Clicking a cell opens a detail panel with everything the map's color alone
+can't show: the full eight-channel pollutant breakdown, a PM2.5-over-the-day
+chart with an hour-by-hour table view underneath it, the cleanest and
+quietest hour recorded there, and the sessions that actually passed through
+that specific block, scoped to the readings taken in that cell rather than
+the whole route someone was on. A live feed at the bottom of the screen
+lists readings as they arrive, with the same list-or-table toggle as the
+chart above it.
 
 Updates reach the page through Server Sent Events, a simple way for a
 server to keep pushing new data to an already open web page without that
@@ -306,14 +310,7 @@ fix, not just the general neighborhood. And every single contributor still
 gets the thing that got them to install the app in the first place: whether
 today is actually worth running outside for, and which way to go.
 
-## Functionality and stability
-
-- The backend has 42 automated tests, and every one of them passes. Run
-  `./gradlew test` to check for yourself.
-- The full pipeline runs end to end on real hardware, not just in
-  simulation: the sensor node, the app, and the backend have all talked to
-  each other over Bluetooth, with a real SEN54 sensor and a real MAX17048
-  battery gauge in the loop.
+[streetsense.tech](https://streetsense.tech/) has more on where this project is headed, plus a waitlist if you would like early access.
 
 ## Demo video
 
@@ -353,42 +350,3 @@ I plan to keep building on this after the contest wraps up, since the idea
 has more potential than a couple of weeks can show. If you're reading this
 well after the submission date and the repository has moved on from what's
 described here, that's why. It would be a shame to stop now.
-
-## Reflection
-
-The hardest part of this project wasn't any single Java feature. It was
-staying honest under a deadline that rewards overclaiming. It would have
-been easy to round "the real sensor path builds" up to "verified," or to
-force in a feature just because it exists in Java 26. Instead, every claim
-in this project points at the exact file, test, or log that backs it up, and
-when a feature didn't earn its place, like Lazy Constants, I cut it instead
-of keeping it for the checklist.
-
-The privacy design took a surprising amount of back and forth too. A grid
-cell of about 110 meters needed to be small enough to tell one street from
-the next, but large enough that it couldn't be reverse engineered into an
-actual route. That number isn't arbitrary. I picked it on purpose, and I'd
-make the same call again.
-
-## Credits
-
-StreetSense builds on a small number of open source components:
-
-- [Sensirion I2C SEN5X](https://github.com/Sensirion/arduino-i2c-sen5x)
-  driver (BSD 3 Clause)
-- [Adafruit MAX1704X](https://github.com/adafruit/Adafruit_MAX1704X) driver
-  (BSD)
-- Adafruit BusIO (MIT) and the Adafruit nRF52 Arduino core
-- [osmdroid](https://github.com/osmdroid/osmdroid) for the app's map
-  (Apache 2.0), with map data from OpenStreetMap contributors (ODbL 1.0)
-
-## Repository layout
-
-```text
-firmware/   PlatformIO, nRF52840, C++
-app/        Android, Java 17
-backend/    Spring Boot, Java 26
-hardware/   Bill of materials
-docs/       Reference material, diagrams, screenshots
-scripts/    One command runners for firmware, backend, and app
-```
