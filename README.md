@@ -73,6 +73,20 @@ sensor calls for the inlet and outlet to be sealed off from each other, so
 outgoing air can't get pulled straight back in and thrown off the next
 reading.
 
+Here's what actually ended up inside it. It's a bit tight, but all the
+electronics can be squeezed in:
+
+<table>
+<tr>
+<td><img src="docs/images/electronics_1.jpg" width="400" alt="The sensor node's internals: SEN54, fuel gauge, and driver board wired together inside the open case"></td>
+<td><img src="docs/images/electronics_2.jpg" width="400" alt="The sensor node's internals from a second angle, showing the battery and USB-C port"></td>
+</tr>
+</table>
+
+And closed up, it looks like this:
+
+<p align="center"><img src="docs/images/finished_sensor_module.jpg" width="400" alt="The assembled sensor node, closed and labeled StreetSense"></p>
+
 ### Hardware
 
 | Component                                                                      | Role                                                                                                                                                                                                                                                                     | Protocol                                                                                                                                                                                                  |
