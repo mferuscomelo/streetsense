@@ -119,13 +119,18 @@ function seqRamp() {
   return seqRampRgb;
 }
 
-function pmColor(meanPm25) {
+// alpha lives here (rgba), not as a separate CSS `opacity` on the marker div
+// — opacity would fade the confidence border along with the fill, and at
+// gapless tiling the fills tile edge-to-edge across the whole viewport, so
+// a flat 0.75 read as a solid coat of paint over the basemap streets it's
+// meant to sit on top of.
+function pmColor(meanPm25, alpha = 1) {
   const [low, high] = seqRamp();
   const t = Math.max(0, Math.min(1, meanPm25 / PM_SCALE_MAX));
   const r = Math.round(low[0] + (high[0] - low[0]) * t);
   const g = Math.round(low[1] + (high[1] - low[1]) * t);
   const b = Math.round(low[2] + (high[2] - low[2]) * t);
-  return `rgb(${r}, ${g}, ${b})`;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 // --- Cell geometry -----------------------------------------------------
@@ -242,17 +247,26 @@ function drawCellIcons({ forceRebuild = false } = {}) {
 
   cellsData.forEach((cell, i) => {
     const { width, height } = cellPixelSize(cell);
-    const borderColor = cell.confidence === 'CORROBORATED' ? 'var(--foreground)' : 'var(--muted-foreground)';
-    const borderWidth = cell.confidence === 'CORROBORATED' ? 2 : 1;
+    // Corroborated cells are the common case — most of the grid, most of
+    // the time — so they get the app's own hairline --border token rather
+    // than a bold --foreground outline: full black-in-light/white-in-dark
+    // borders on the majority of cells read as a harsh graph-paper grid
+    // laid over the whole map. Single-contributor is the one worth
+    // flagging as provisional, so it keeps the dashed, more visible edge.
+    const borderColor = cell.confidence === 'SINGLE_CONTRIBUTOR' ? 'var(--muted-foreground)' : 'var(--border)';
+    const borderWidth = 1;
     const borderStyle = cell.confidence === 'SINGLE_CONTRIBUTOR' ? 'dashed' : 'solid';
-    const fillOpacity = cell.confidence === 'NO_DATA' ? 0.15 : cell.confidence === 'SINGLE_CONTRIBUTOR' ? 0.45 : 0.75;
+    // Low even at full confidence — a gapless grid means these fills tile
+    // edge-to-edge across the whole visible map, so anything much above
+    // this reads as a solid coat rather than a tint on the streets below.
+    const fillAlpha = cell.confidence === 'NO_DATA' ? 0.10 : cell.confidence === 'SINGLE_CONTRIBUTOR' ? 0.30 : 0.50;
 
     const icon = L.divIcon({
       className: 'cell-icon',
       iconSize: [width, height],
       iconAnchor: [width / 2, height / 2],
-      html: `<div style="width:${width}px;height:${height}px;box-sizing:border-box;`
-          + `background:${pmColor(cell.meanPm2_5)};opacity:${fillOpacity};`
+      html: `<div class="cell-fill" style="width:${width}px;height:${height}px;box-sizing:border-box;`
+          + `background:${pmColor(cell.meanPm2_5, fillAlpha)};`
           + `border:${borderWidth}px ${borderStyle} ${borderColor};"></div>`,
     });
 

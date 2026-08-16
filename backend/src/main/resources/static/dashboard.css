@@ -163,10 +163,20 @@ a {
   background: var(--background);
 }
 
-.leaflet-div-icon.cell-icon {
+.cell-icon {
   background: transparent;
   border: none;
   box-shadow: none;
+  cursor: pointer;
+}
+.cell-fill {
+  transition: filter 0.1s ease;
+}
+.cell-icon:hover .cell-fill {
+  filter: brightness(1.25) saturate(1.15);
+}
+:root[data-theme="dark"] .cell-icon:hover .cell-fill {
+  filter: brightness(1.5) saturate(1.15);
 }
 
 /* Leaflet's own chrome (zoom control, attribution) restyled to match —
@@ -374,7 +384,7 @@ a {
   background: transparent;
 }
 .legend-confidence .corroborated .swatch {
-  border: 2px solid var(--foreground);
+  border: 1px solid var(--border);
 }
 .legend-disclaimer {
   margin: 12px 0 0;
