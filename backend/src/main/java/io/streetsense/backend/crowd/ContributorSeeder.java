@@ -201,8 +201,10 @@ public class ContributorSeeder {
         private int routeOffsetCells = 2;
         /** How many parallel avenues contributors are spread across. */
         private int avenueCount = 4;
-        /** Longitude spacing (in cells) between adjacent avenues. */
-        private int avenueOffsetCells = 3;
+        /** Longitude spacing (in cells) between adjacent avenues. 1 keeps avenues
+         *  in adjacent columns so the seeded grid reads as a gapless block rather
+         *  than a striped one. */
+        private int avenueOffsetCells = 1;
         private int samplesPerHour = 10;
         private int[] hours = {6, 7, 8, 9, 12, 15, 17, 18, 19, 21};
 
