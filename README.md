@@ -136,7 +136,7 @@ carries a fixed, packed binary packet, chosen over sending JSON text since
 parsing JSON on a small microcontroller is unnecessary overhead once both
 sides already agree on a fixed layout.
 
-![BLE packet layout, 26 bytes, little endian](docs/diagrams/ble-packet-layout.excalidraw.png)
+![BLE packet layout, 26 bytes, little endian](docs/diagrams/ble-packet-layout.png)
 
 The current wire format packs everything into 26 fixed size, fixed scale
 bytes. An earlier, shorter 20 byte version was deliberately sized to fit
@@ -201,8 +201,6 @@ person can actually act on. The build's toolchain declaration requires JDK
 26, and a committed `build.log` file is the actual `java --version` output
 from that exact toolchain, written automatically so the claim has a receipt
 rather than resting on a version number in a config file.
-
-![What happens to a reading in the backend: decode, a Structured Concurrency fork into save, update baseline, and check for anomaly, then the session level dose and the shared crowd layer, with the Java 26 feature behind each step tagged](docs/diagrams/backend-pipeline.excalidraw.png)
 
 Two preview features exist only in Java 26, and both do real work here, not
 just a token appearance:
