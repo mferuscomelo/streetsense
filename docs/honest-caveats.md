@@ -7,11 +7,11 @@ to be discovered.
   instrument.** Its readings are useful for relative comparison (this
   block vs. its own history) and not suitable for regulatory or medical
   claims. The firmware's real sensor path (`ledglasses_sen54` environment,
-  `firmware/src/sen54_sensor_source.cpp`) is implemented and builds, but has
-  not yet been run against physical hardware — the SEN54 is currently
-  committed to another project. `ledglasses` (the default environment)
-  runs the mock source; see `docs/ble-protocol.md` for how mock data is
-  flagged end-to-end.
+  `firmware/src/sen54_sensor_source.cpp`) has been run end-to-end against
+  physical hardware — real SEN54, PDM mic, and MAX17048 fuel gauge, over
+  BLE to the app. `ledglasses` (the default environment) still runs the
+  mock source for demos without the sensor attached; see
+  `docs/ble-protocol.md` for how mock data is flagged end-to-end.
 - **The noise figure is an uncalibrated estimate, not a certified dB(A)
   measurement.** `firmware/src/pdm_noise_meter.cpp` computes a flat
   (unweighted) RMS level from the onboard PDM microphone and applies a
