@@ -4,51 +4,74 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>StreetSense</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><text y=%2213%22 font-size=%2213%22>🌬️</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><rect width=16 height=16 rx=3 fill=%22%230d366b%22/><g fill=%22%23fff%22><rect x=2 y=2 width=3.2 height=3.2/><rect x=6.4 y=2 width=3.2 height=3.2/><rect x=10.8 y=2 width=3.2 height=3.2/><rect x=2 y=6.4 width=3.2 height=3.2/><rect x=10.8 y=6.4 width=3.2 height=3.2/><rect x=2 y=10.8 width=3.2 height=3.2/><rect x=6.4 y=10.8 width=3.2 height=3.2/><rect x=10.8 y=10.8 width=3.2 height=3.2/></g><rect x=6.4 y=6.4 width=3.2 height=3.2 fill=%22%23fab219%22/></svg>">
+<script>
+  // Runs before dashboard.css loads, so the theme is correct on first
+  // paint — a <script defer> at the bottom of the page can't prevent a
+  // flash of the wrong theme.
+  (function () {
+    var saved = localStorage.getItem('streetsense-theme');
+    var theme = saved || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.dataset.theme = theme;
+  })();
+</script>
 <link rel="stylesheet" href="dashboard.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 </head>
 <body>
 
-<header>
-  <h1>StreetSense</h1>
-  <span class="subtitle">what this block is breathing, pooled from everyone who's walked it</span>
-  <div class="live-indicator">
-    <span id="liveDot" class="live-dot"></span>
-    <span id="liveLabel">connecting…</span>
+<div id="map"></div>
+
+<header class="overlay overlay-header">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">
+      <span></span><span></span><span></span>
+      <span></span><span></span><span></span>
+      <span></span><span></span><span></span>
+    </span>
+    <div>
+      <h1>StreetSense</h1>
+      <span class="subtitle">what this block is breathing, pooled from everyone who's walked it</span>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="live-indicator">
+      <span id="liveDot" class="live-dot"></span>
+      <span id="liveLabel">connecting…</span>
+    </div>
+    <button id="themeToggle" class="icon-button" type="button" title="Toggle light/dark" aria-label="Toggle light/dark theme">◐</button>
   </div>
 </header>
 
-<div class="stat-tiles">
+<div class="overlay overlay-stats">
   <div class="stat-tile"><div class="value" id="statCells">–</div><div class="label">blocks mapped</div></div>
   <div class="stat-tile"><div class="value" id="statCorroborated">–</div><div class="label">crowd-corroborated</div></div>
   <div class="stat-tile"><div class="value" id="statSingle">–</div><div class="label">single contributor</div></div>
-  <div class="stat-tile"><div class="value" id="statSeeded">–</div><div class="label">include seeded demo data</div></div>
+  <div class="stat-tile"><div class="value" id="statSeeded">–</div><div class="label">includes seeded demo data</div></div>
 </div>
 
-<main>
-  <section class="card">
-    <h2>The city, as measured</h2>
-    <div id="map"></div>
-    <div class="legend">
-      <div class="legend-scale"></div>
-      <div class="legend-scale-labels">
-        <span>0 µg/m³ PM2.5</span>
-        <span>100+ µg/m³</span>
-      </div>
-      <div class="legend-confidence">
-        <span class="single"><span class="swatch"></span>single contributor</span>
-        <span class="corroborated"><span class="swatch"></span>crowd-corroborated</span>
-      </div>
-    </div>
-  </section>
+<div class="overlay overlay-legend">
+  <div class="legend-scale"></div>
+  <div class="legend-scale-labels">
+    <span>0 µg/m³ PM2.5</span>
+    <span>100+ µg/m³</span>
+  </div>
+  <div class="legend-confidence">
+    <span class="single"><span class="swatch"></span>single contributor</span>
+    <span class="corroborated"><span class="swatch"></span>crowd-corroborated</span>
+  </div>
+</div>
 
-  <section class="card">
-    <div class="feed-header">
-      <h2>Live feed</h2>
+<section class="overlay overlay-feed" id="feedOverlay">
+  <div class="feed-header">
+    <h2>Live feed</h2>
+    <div class="feed-header-actions">
       <button id="feedToggle" class="feed-toggle" type="button">Table view</button>
+      <button id="feedCollapse" class="feed-collapse" type="button" aria-expanded="true">Hide</button>
     </div>
+  </div>
+  <div class="feed-body-wrap">
     <ul id="feedList" class="feed-list"></ul>
     <table id="feedTable" class="feed-table hidden">
       <thead>
@@ -57,12 +80,16 @@
       <tbody id="feedTableBody"></tbody>
     </table>
     <div id="feedEmpty" class="feed-empty">Waiting for the first reading…</div>
-  </section>
-</main>
+  </div>
+</section>
 
-<footer>
-  Map data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors.
-  Readings and contributors marked <strong>seeded</strong> are generated to demonstrate the crowd layer with one physical node — never presented as measured. See docs/honest-caveats.md.
+<aside id="cellPanel" hidden aria-label="Cell detail"></aside>
+
+<footer class="attribution">
+  Map &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>
+  contributors &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>.
+  Readings and contributors marked <strong>seeded</strong> are generated to demonstrate the crowd layer with one
+  physical node — never presented as measured. See docs/honest-caveats.md.
 </footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
