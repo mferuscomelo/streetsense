@@ -15,7 +15,8 @@ Run the host side tests:
 scripts/run-firmware.sh test
 ```
 
-Build the mock sensor target. This target always flags its data as mock:
+Build the synthetic sensor target. This target always flags its data as
+synthetic:
 
 ```sh
 scripts/run-firmware.sh
@@ -97,6 +98,6 @@ Complete these three steps before you run the app:
    grid cell.
 
 Open the app. Pick an activity. Tap Continue. Connect to `StreetSense-01`.
-Tap Start session. The screen shows live values once per second. A MOCK
-badge appears when the connected sensor node sends synthetic data. Tap
-Finish to see your session summary.
+Tap Start session. The screen shows live values once per second. A badge
+appears when the connected sensor node sends synthetic data. Tap Finish to
+see your session summary.
