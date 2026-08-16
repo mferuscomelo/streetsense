@@ -106,6 +106,9 @@
   /* Shared with .overlay-stats so its top offset is computed, not guessed —
      see the fix note there. */
   --header-height: 72px;
+  /* Shared with .overlay-feed's panel-open shift and #cellPanel's own
+     width — see the fix note on .overlay-feed. */
+  --panel-width: 420px;
 }
 
 @font-face {
@@ -375,8 +378,10 @@ button {
 }
 
 /* ---------------------------------------------------------------------
-   Live feed — collapsible, bottom-right so it never collides with the
-   cell panel docked on the right edge
+   Live feed — collapsible, bottom-right. The cell panel is wider (420px)
+   than this card's offset from the right edge (340+20=360px), so without
+   the .panel-open shift below, opening a cell would silently bury this
+   card behind the panel — see the panel-open rule.
    ------------------------------------------------------------------- */
 
 .overlay-feed {
@@ -387,7 +392,12 @@ button {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  transition: right 0.22s ease, transform 0.2s ease, opacity 0.2s ease;
+}
+@media (min-width: 641px) {
+  .overlay-feed.panel-open {
+    right: calc(var(--panel-width) + var(--gutter));
+  }
 }
 .overlay-feed.collapsed {
   max-height: none;
@@ -503,7 +513,7 @@ table.feed-table th {
   top: 0;
   right: 0;
   height: 100vh;
-  width: min(420px, 100vw);
+  width: min(var(--panel-width), 100vw);
   z-index: 20;
   background: var(--card);
   border-left: 1px solid var(--border);

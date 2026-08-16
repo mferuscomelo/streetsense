@@ -269,6 +269,9 @@ function openCellPanel(latBucket, lonBucket) {
   const panel = document.getElementById('cellPanel');
   panel.hidden = false;
   requestAnimationFrame(() => panel.classList.add('open'));
+  // The panel is wider than the live feed's offset from the right edge, so
+  // without this the panel would silently bury the feed behind it.
+  document.getElementById('feedOverlay').classList.add('panel-open');
   renderPanelMessage(`Cell ${latBucket}, ${lonBucket}`, 'Loading…');
   fetchAndRenderPanel(latBucket, lonBucket);
 }
@@ -276,6 +279,7 @@ function openCellPanel(latBucket, lonBucket) {
 function closeCellPanel() {
   const panel = document.getElementById('cellPanel');
   panel.classList.remove('open');
+  document.getElementById('feedOverlay').classList.remove('panel-open');
   openCellKey = null;
   setTimeout(() => {
     if (!panel.classList.contains('open')) panel.hidden = true;
