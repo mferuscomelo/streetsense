@@ -166,6 +166,9 @@ button {
   background: var(--card) !important;
   color: var(--foreground) !important;
   border-color: var(--border) !important;
+  width: var(--min-touch) !important;
+  height: var(--min-touch) !important;
+  line-height: var(--min-touch) !important;
 }
 .leaflet-control-attribution {
   background: rgba(254, 253, 250, 0.75) !important;
@@ -250,8 +253,8 @@ button {
 }
 
 .icon-button {
-  width: 36px;
-  height: 36px;
+  width: var(--min-touch);
+  height: var(--min-touch);
   border-radius: var(--radius-stadium);
   border: 1px solid var(--border);
   background: var(--card);
@@ -431,7 +434,10 @@ button {
   background: var(--card);
   color: var(--muted-foreground);
   border-radius: var(--radius-stadium);
-  padding: 4px 10px;
+  padding: 4px 12px;
+  min-height: var(--min-touch);
+  display: inline-flex;
+  align-items: center;
   cursor: pointer;
   font-family: var(--font-body);
 }
