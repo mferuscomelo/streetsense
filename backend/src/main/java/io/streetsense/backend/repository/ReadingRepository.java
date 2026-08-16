@@ -5,6 +5,7 @@ import io.streetsense.backend.domain.CellKey;
 import io.streetsense.backend.domain.Verdict;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * In-memory now; Postgres/PostGIS lands next slice behind this same
@@ -34,4 +35,14 @@ public interface ReadingRepository {
 
     /** Every (cell, hour) key anyone has contributed a reading to. */
     java.util.Set<CellKey> knownKeys();
+
+    /**
+     * Removes every stored reading whose contributor id matches, from every
+     * index. Exists for re-seeding around a new center (see
+     * {@code ContributorSeeder.seedAround}) so a repeated request replaces
+     * the seeded neighborhood instead of layering another one on top —
+     * measured readings never match a seeded-contributor predicate and are
+     * never touched by this.
+     */
+    void evictWhere(Predicate<String> contributorIdMatches);
 }
