@@ -101,6 +101,13 @@ public class ContributorSeeder {
         Instant base = Instant.now().minus(Duration.ofDays(7));
         int written = 0;
 
+        // Bucket arithmetic, not degree arithmetic: longitude's degrees-per-
+        // cell varies with latBucket (see GridCell's cos(latitude)
+        // correction), so "one avenue over" has to mean "+1 lonBucket", not
+        // "+0.001° longitude" — the latter would drift off the true bucket
+        // boundary away from the equator.
+        GridCell origin = GridCell.of(params.centerLat(), params.centerLon());
+
         for (int c = 0; c < params.contributors(); c++) {
             String contributorId = CrowdService.SEEDED_PREFIX + "contributor-" + c;
 
@@ -123,9 +130,9 @@ public class ContributorSeeder {
 
             for (int step = 0; step < params.cells(); step++) {
                 int cellIndex = startCell + step;
-                GridCell cell = GridCell.of(
-                        params.centerLat() + cellIndex * 0.001,
-                        params.centerLon() + avenue * params.avenueOffsetCells() * 0.001);
+                GridCell cell = new GridCell(
+                        origin.latBucket() + cellIndex,
+                        origin.lonBucket() + avenue * params.avenueOffsetCells());
 
                 for (int hour : params.hours()) {
                     // Traffic-shaped, so the cleanest/quietest-hour

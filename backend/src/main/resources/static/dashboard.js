@@ -1,9 +1,32 @@
-// Cell size mirrors backend/.../domain/GridCell.java and
+// Cell geometry mirrors backend/.../domain/GridCell.java and
 // app/.../location/GridCell.java — three independent implementations of the
-// same constant now, same discipline as the BLE UUIDs in docs/ble-protocol.md.
+// same formula now, same discipline as the BLE UUIDs in docs/ble-protocol.md.
 // A drift here is cosmetic (misdrawn rectangles), not a privacy break like a
-// drift on the other two would be, but it's still one constant, kept equal.
+// drift on the other two would be, but it's still one formula, kept equal.
 const CELL_SIZE_DEGREES = 0.001;
+
+// Longitude's degrees-per-cell isn't flat like latitude's — 0.001° of
+// longitude covers less real-world distance the further a row sits from the
+// equator, so a lonBucket alone doesn't imply a fixed-width span in degrees.
+// Widening by 1/cos(latitude) (same correction GridCell.java applies before
+// bucketing) keeps a cell's real-world footprint square at its row's
+// latitude, which is what makes it render as a square on a conformal
+// (Web Mercator) map too — see cellPixelSize() below.
+//
+// Resolved per band of LAT_BAND_CELLS rows (~11.1km), not per individual
+// row, and must match GridCell.java's banding exactly. lonBucket is a large
+// integer counted from the prime meridian (already in the thousands for any
+// mid-latitude city); multiplying that by a step size that changes every row
+// turns cos(latitude)'s per-row floating-point drift into a visible,
+// growing offset between rows a few blocks apart. One shared step per band
+// keeps a whole city's worth of cells bit-for-bit aligned.
+const LAT_BAND_CELLS = 100;
+
+function lonStepDegrees(latBucket) {
+  const band = Math.floor(latBucket / LAT_BAND_CELLS);
+  const bandCenterLat = (band * LAT_BAND_CELLS + LAT_BAND_CELLS / 2) * CELL_SIZE_DEGREES;
+  return CELL_SIZE_DEGREES / Math.cos(bandCenterLat * Math.PI / 180);
+}
 const PM_SCALE_MAX = 100; // µg/m³ at which the sequential ramp saturates
 const FALLBACK_CENTER = [49.0069, 8.4037]; // used when geolocation is denied/unavailable/disabled
 const THEME_KEY = 'streetsense-theme';
@@ -110,22 +133,28 @@ function pmColor(meanPm25) {
 function cellBounds(cell) {
   const south = cell.latBucket * CELL_SIZE_DEGREES;
   const north = south + CELL_SIZE_DEGREES;
-  const west = cell.lonBucket * CELL_SIZE_DEGREES;
-  const east = west + CELL_SIZE_DEGREES;
+  const lonStep = lonStepDegrees(cell.latBucket);
+  const west = cell.lonBucket * lonStep;
+  const east = west + lonStep;
   return [[south, west], [north, east]];
 }
 
-// Web Mercator's y-axis scales by sec(latitude) relative to x, so a cell's
-// true geographic bounds render taller than wide the further from the
-// equator you are — widening the longitude span to compensate would make
-// neighboring cells overlap. Instead, cells are drawn as fixed-pixel
-// squares: this measures the true north-south pixel span (latitude-correct,
-// longitude-independent) and reuses it as both the width and height.
+// cellBounds() already widens longitude by the same secant correction that
+// Web Mercator's y-axis applies, so a cell's true geographic footprint is
+// square in real-world metres and — because Mercator is conformal — square
+// in pixels too, at any zoom or latitude. Width and height are still
+// measured independently rather than assumed equal: it costs one extra
+// latLngToContainerPoint call and stays correct if that assumption is ever
+// wrong (a rounding edge case, a future non-conformal basemap) instead of
+// silently drawing gapped or overlapping cells.
 function cellPixelSize(cell) {
   const bounds = cellBounds(cell);
-  const pSouth = map.latLngToContainerPoint(bounds[0]);
-  const pNorth = map.latLngToContainerPoint(bounds[1]);
-  return Math.max(2, Math.round(Math.abs(pNorth.y - pSouth.y)));
+  const pSouthWest = map.latLngToContainerPoint(bounds[0]);
+  const pNorthEast = map.latLngToContainerPoint(bounds[1]);
+  const pSouthEast = map.latLngToContainerPoint([bounds[0][0], bounds[1][1]]);
+  const width = Math.max(2, Math.round(Math.abs(pSouthEast.x - pSouthWest.x)));
+  const height = Math.max(2, Math.round(Math.abs(pNorthEast.y - pSouthWest.y)));
+  return { width, height };
 }
 
 function cellCenter(cell) {
@@ -212,7 +241,7 @@ function drawCellIcons({ forceRebuild = false } = {}) {
   }
 
   cellsData.forEach((cell, i) => {
-    const size = cellPixelSize(cell);
+    const { width, height } = cellPixelSize(cell);
     const borderColor = cell.confidence === 'CORROBORATED' ? 'var(--foreground)' : 'var(--muted-foreground)';
     const borderWidth = cell.confidence === 'CORROBORATED' ? 2 : 1;
     const borderStyle = cell.confidence === 'SINGLE_CONTRIBUTOR' ? 'dashed' : 'solid';
@@ -220,9 +249,9 @@ function drawCellIcons({ forceRebuild = false } = {}) {
 
     const icon = L.divIcon({
       className: 'cell-icon',
-      iconSize: [size, size],
-      iconAnchor: [size / 2, size / 2],
-      html: `<div style="width:${size}px;height:${size}px;box-sizing:border-box;`
+      iconSize: [width, height],
+      iconAnchor: [width / 2, height / 2],
+      html: `<div style="width:${width}px;height:${height}px;box-sizing:border-box;`
           + `background:${pmColor(cell.meanPm2_5)};opacity:${fillOpacity};`
           + `border:${borderWidth}px ${borderStyle} ${borderColor};"></div>`,
     });

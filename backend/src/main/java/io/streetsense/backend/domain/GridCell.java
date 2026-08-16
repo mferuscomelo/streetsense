@@ -17,11 +17,20 @@ package io.streetsense.backend.domain;
  *       at a smaller area.</li>
  * </ul>
  *
- * <p>0.001° is ~111m of latitude, about a city block: fine enough to
- * distinguish one street from the next, coarse enough that a contribution
- * names a block rather than a building. See {@code docs/honest-caveats.md}.
+ * <p>0.001° of latitude is ~111m everywhere on Earth, about a city block:
+ * fine enough to distinguish one street from the next, coarse enough that a
+ * contribution names a block rather than a building. See
+ * {@code docs/honest-caveats.md}. Longitude is different — 0.001° of
+ * longitude shrinks toward the poles (it's a fixed fraction of a parallel's
+ * circumference, and parallels get shorter with latitude), so bucketing
+ * longitude at a flat 0.001° makes cells narrower than they are tall almost
+ * everywhere off the equator. The longitude step is widened by
+ * {@code 1 / cos(latitude)} — the same secant correction Web Mercator itself
+ * uses — so a cell is close to square in real-world metres (and therefore
+ * on any conformally-projected map) at whatever latitude it sits at, not
+ * just at the equator.
  *
- * <p><b>This constant is mirrored in {@code app/.../location/GridCell.java}
+ * <p><b>This formula is mirrored in {@code app/.../location/GridCell.java}
  * and the two must agree</b>, the same way the BLE UUIDs are mirrored between
  * firmware and app. {@code GridCellTest} and the app's {@code GridCellTest}
  * assert the same golden coordinates on both sides; if they drift, readings
@@ -42,8 +51,37 @@ public record GridCell(int latBucket, int lonBucket) {
      * does not, by design: the phone snaps before upload.
      */
     public static GridCell of(double lat, double lon) {
-        return new GridCell(
-                (int) Math.floor(lat / CELL_SIZE_DEGREES),
-                (int) Math.floor(lon / CELL_SIZE_DEGREES));
+        int latBucket = (int) Math.floor(lat / CELL_SIZE_DEGREES);
+        int lonBucket = (int) Math.floor(lon / lonStepDegrees(latBucket));
+        return new GridCell(latBucket, lonBucket);
+    }
+
+    /** Latitude cells per longitude-correction band — ~11.1km. */
+    private static final int LAT_BAND_CELLS = 100;
+
+    /**
+     * The longitude width, in degrees, of every cell in {@code latBucket}'s
+     * band — widened by {@code 1 / cos(latitude)} so a cell is square in
+     * real-world metres rather than a flat 0.001° regardless of how
+     * compressed longitude is there.
+     *
+     * <p>The correction is resolved per <em>band</em> of {@link
+     * #LAT_BAND_CELLS} rows (~11.1km), not per individual row. A lonBucket
+     * is a global integer counted from the prime meridian — for a
+     * mid-latitude city that's already in the thousands — and multiplying
+     * that large integer by a step size that changes with every row turns
+     * cos(latitude)'s per-row floating-point drift (sub-micro-degree) into a
+     * visible, growing offset between rows a few blocks apart, the same way
+     * a tiny per-mile compass error puts you miles off course over a long
+     * walk. Sharing one step across a whole band keeps every cell within it
+     * — the span of a typical single-city deployment — bit-for-bit aligned;
+     * the only cost is a barely-perceptible seam at a band boundary, the
+     * same trade every real-world planar grid over a round Earth makes (UTM
+     * zones, state-plane coordinate zones).
+     */
+    static double lonStepDegrees(int latBucket) {
+        int band = Math.floorDiv(latBucket, LAT_BAND_CELLS);
+        double bandCenterLat = (band * LAT_BAND_CELLS + LAT_BAND_CELLS / 2.0) * CELL_SIZE_DEGREES;
+        return CELL_SIZE_DEGREES / Math.cos(Math.toRadians(bandCenterLat));
     }
 }
