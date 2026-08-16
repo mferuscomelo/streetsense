@@ -27,7 +27,7 @@ function lonStepDegrees(latBucket) {
   const bandCenterLat = (band * LAT_BAND_CELLS + LAT_BAND_CELLS / 2) * CELL_SIZE_DEGREES;
   return CELL_SIZE_DEGREES / Math.cos(bandCenterLat * Math.PI / 180);
 }
-const PM_SCALE_MAX = 100; // µg/m³ at which the sequential ramp saturates
+const PM_SCALE_MAX = 20; // µg/m³ at which the sequential ramp saturates — matches the seeded data's real range, so the ramp actually spreads out instead of everything reading pale
 const FALLBACK_CENTER = [49.0069, 8.4037]; // used when geolocation is denied/unavailable/disabled
 const THEME_KEY = 'streetsense-theme';
 
