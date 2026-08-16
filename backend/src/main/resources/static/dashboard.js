@@ -97,12 +97,40 @@ function buildPopup(cell) {
 function renderCells(map, cells) {
   cellsData = cells;
   drawCellIcons(map, { forceRebuild: true });
+  updateStats(cellsData);
+}
 
+function updateStats(cells) {
   const stat = (id, value) => { document.getElementById(id).textContent = value; };
   stat('statCells', cells.length);
   stat('statCorroborated', cells.filter(c => c.confidence === 'CORROBORATED').length);
   stat('statSingle', cells.filter(c => c.confidence === 'SINGLE_CONTRIBUTOR').length);
   stat('statSeeded', cells.some(c => c.hasSeededData) ? 'yes' : 'no');
+}
+
+// A reading's own cell summary (sample count, confidence, means) isn't in
+// the SSE payload — only the decoded reading is. So a new/changed cell is
+// pulled from its dedicated endpoint and merged in, rather than trying to
+// derive a CellSummary client-side from a stream of individual readings.
+function upsertCell(map, cell) {
+  const idx = cellsData.findIndex(c => c.latBucket === cell.latBucket && c.lonBucket === cell.lonBucket);
+  if (idx === -1) {
+    cellsData.push(cell);
+  } else {
+    cellsData[idx] = cell;
+  }
+  drawCellIcons(map);
+  updateStats(cellsData);
+}
+
+function refreshCell(map, latBucket, lonBucket) {
+  fetch(`/api/v1/cells/${latBucket}/${lonBucket}`)
+    .then((res) => res.json())
+    .then((cell) => upsertCell(map, cell))
+    .catch(() => {
+      // Live feed row already showed the reading; a missed grid refresh
+      // isn't worth surfacing as an error — the next reading retries it.
+    });
 }
 
 function drawCellIcons(map, { forceRebuild = false } = {}) {
@@ -203,7 +231,9 @@ function feedTableRow(reading) {
   return tr;
 }
 
-function onReading(reading) {
+function onReading(map, reading) {
+  refreshCell(map, reading.cell.latBucket, reading.cell.lonBucket);
+
   feedEvents.unshift(reading);
   feedEvents.length = Math.min(feedEvents.length, MAX_FEED_ROWS);
 
@@ -222,7 +252,7 @@ function onReading(reading) {
   }
 }
 
-function connectLiveFeed() {
+function connectLiveFeed(map) {
   const dot = document.getElementById('liveDot');
   const label = document.getElementById('liveLabel');
   const source = new EventSource('/api/v1/stream');
@@ -236,7 +266,7 @@ function connectLiveFeed() {
     label.textContent = 'reconnecting…';
   };
   source.addEventListener('reading', (event) => {
-    onReading(JSON.parse(event.data));
+    onReading(map, JSON.parse(event.data));
   });
 }
 
@@ -258,7 +288,7 @@ function initFeedToggle() {
 
 const map = initMap();
 initFeedToggle();
-connectLiveFeed();
+connectLiveFeed(map);
 
 fetch('/api/v1/cells')
   .then((res) => res.json())
