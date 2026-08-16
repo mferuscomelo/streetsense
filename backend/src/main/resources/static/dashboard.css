@@ -102,6 +102,10 @@
   --radius-panel:   32px;
   --radius-well:    24px;
   --radius-stadium: 999px;
+
+  /* Shared with .overlay-stats so its top offset is computed, not guessed —
+     see the fix note there. */
+  --header-height: 72px;
 }
 
 @font-face {
@@ -190,10 +194,11 @@ button {
   top: var(--gutter);
   left: var(--gutter);
   right: var(--gutter);
+  height: var(--header-height);
   display: flex;
   align-items: center;
   gap: var(--stack);
-  padding: 14px var(--card-padding);
+  padding: 0 var(--card-padding);
   border-radius: var(--radius-stadium);
 }
 
@@ -284,7 +289,7 @@ button {
 }
 
 .overlay-stats {
-  top: 78px;
+  top: calc(var(--gutter) + var(--header-height) + var(--stack));
   left: var(--gutter);
   display: flex;
   flex-direction: column;
