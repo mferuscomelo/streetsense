@@ -13,10 +13,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
  * Bounded in-memory ring buffer. Simple `synchronized` methods rather than
@@ -108,23 +105,5 @@ public final class InMemoryReadingRepository implements ReadingRepository {
             if (r != null) result.add(r);
         }
         return List.copyOf(result);
-    }
-
-    @Override
-    public synchronized void evictWhere(Predicate<String> contributorIdMatches) {
-        Set<Long> toRemove = byId.entrySet().stream()
-                .filter(e -> contributorIdMatches.test(e.getValue().reading().contributorId()))
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toSet());
-        if (toRemove.isEmpty()) {
-            return;
-        }
-
-        toRemove.forEach(byId::remove);
-        insertionOrder.removeIf(toRemove::contains);
-        bySession.values().forEach(ids -> ids.removeIf(toRemove::contains));
-        bySession.values().removeIf(List::isEmpty);
-        byKey.values().forEach(history -> history.removeIf(r -> contributorIdMatches.test(r.contributorId())));
-        byKey.values().removeIf(Deque::isEmpty);
     }
 }

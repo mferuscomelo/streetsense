@@ -28,7 +28,7 @@ function lonStepDegrees(latBucket) {
   return CELL_SIZE_DEGREES / Math.cos(bandCenterLat * Math.PI / 180);
 }
 const PM_SCALE_MAX = 20; // µg/m³ at which the sequential ramp saturates — matches the seeded data's real range, so the ramp actually spreads out instead of everything reading pale
-const FALLBACK_CENTER = [49.0069, 8.4037]; // used when geolocation is denied/unavailable/disabled
+const MAP_CENTER = [49.0069, 8.4037]; // matches streetsense.seed's default center — where the backend's one boot-time seed actually put its data
 const THEME_KEY = 'streetsense-theme';
 
 const TILES = {
@@ -286,37 +286,6 @@ function initMap(center) {
   map = L.map('map', { scrollWheelZoom: true, zoomControl: true }).setView(center, 15);
   swapTileLayer(currentTheme());
   map.on('zoomend', () => drawCellIcons());
-}
-
-// --- Geolocation-driven centering + seeding -------------------------------
-
-// Checking /api/v1/seed/status first means a real (non-demo) deployment
-// never prompts a visitor for their location when there's nothing to seed.
-async function resolveCenter() {
-  let status = { enabled: false };
-  try {
-    status = await fetch('/api/v1/seed/status').then((res) => res.json());
-  } catch {
-    // Backend unreachable — the /api/v1/cells fetch in boot() will surface
-    // that error to the live-feed label; fall through to the default center.
-  }
-
-  if (!status.enabled || !('geolocation' in navigator)) {
-    return FALLBACK_CENTER;
-  }
-
-  try {
-    const pos = await new Promise((resolve, reject) =>
-        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 }));
-    const center = [pos.coords.latitude, pos.coords.longitude];
-    // Fire-and-forget: the map should center and start loading /api/v1/cells
-    // immediately, with the seeded cells simply appearing once the backend
-    // finishes writing them (or on the next SSE tick).
-    fetch(`/api/v1/seed?lat=${center[0]}&lon=${center[1]}`, { method: 'POST' }).catch(() => {});
-    return center;
-  } catch {
-    return FALLBACK_CENTER;
-  }
 }
 
 // --- Cell detail side panel ------------------------------------------------
@@ -848,8 +817,7 @@ function initFeedCollapse() {
 // --- Boot ---------------------------------------------------------------
 
 (async function boot() {
-  const center = await resolveCenter();
-  initMap(center);
+  initMap(MAP_CENTER);
   initThemeToggle();
   initFeedToggle();
   initFeedCollapse();

@@ -4,7 +4,6 @@ import io.streetsense.backend.domain.Activity;
 import io.streetsense.backend.domain.DecodedReading;
 import io.streetsense.backend.domain.GridCell;
 import io.streetsense.backend.ingest.IngestService;
-import io.streetsense.backend.repository.ReadingRepository;
 import io.streetsense.backend.wire.DecodedPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,12 +40,10 @@ public class ContributorSeeder {
 
     private static final Logger log = LoggerFactory.getLogger(ContributorSeeder.class);
 
-    private final ReadingRepository repository;
     private final IngestService ingestService;
     private final SeedSettings settings;
 
-    public ContributorSeeder(ReadingRepository repository, IngestService ingestService, SeedSettings settings) {
-        this.repository = repository;
+    public ContributorSeeder(IngestService ingestService, SeedSettings settings) {
         this.ingestService = ingestService;
         this.settings = settings;
     }
@@ -71,26 +68,6 @@ public class ContributorSeeder {
                             + "Every one is flagged mock and prefixed '{}' — see docs/honest-caveats.md.",
                     written, CrowdService.SEEDED_PREFIX);
         };
-    }
-
-    /**
-     * Re-seeds around a caller-supplied center — the dashboard's resolved
-     * geolocation, typically — instead of the configured default. Evicts
-     * whatever seeded data exists first, so repeated calls (page reloads,
-     * geolocation resolving after an initial fallback paint) replace the
-     * visible neighborhood rather than layering duplicates under the same
-     * deterministic contributor ids, or leaving a stray cluster behind at
-     * the old center. Never touches measured readings — eviction only
-     * matches {@link CrowdService#isSeeded}.
-     */
-    public int seedAround(double lat, double lon) throws Exception {
-        if (!settings.isEnabled()) {
-            throw new IllegalStateException("streetsense.seed.enabled is false");
-        }
-        repository.evictWhere(CrowdService::isSeeded);
-        int written = seed(settings.toParams().withCenter(lat, lon));
-        log.info("Re-seeded {} synthetic readings around {},{}", written, lat, lon);
-        return written;
     }
 
     // A dense, near-total fill across the whole viewport rather than a
@@ -295,12 +272,7 @@ public class ContributorSeeder {
     }
 
     /** Immutable snapshot of one seeding run's parameters — see {@link SeedSettings#toParams()}. */
-    public record SeedParams(double centerLat, double centerLon, int samplesPerHour, int[] hours) {
-
-        public SeedParams withCenter(double lat, double lon) {
-            return new SeedParams(lat, lon, samplesPerHour, hours);
-        }
-    }
+    public record SeedParams(double centerLat, double centerLon, int samplesPerHour, int[] hours) {}
 
     /** Bound from {@code streetsense.seed.*}. Disabled unless explicitly enabled. */
     public static class SeedSettings {
