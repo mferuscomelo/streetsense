@@ -361,6 +361,15 @@ button {
 .legend-confidence .corroborated .swatch {
   border: 2px solid var(--foreground);
 }
+.legend-disclaimer {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  line-height: 1.4;
+}
+.legend-disclaimer strong {
+  color: var(--destructive);
+}
 @media (max-width: 640px) {
   .overlay-legend { display: none; }
 }
@@ -745,18 +754,6 @@ table.feed-table th {
   color: var(--muted-foreground);
   font-size: var(--text-body-sm);
 }
-
-footer.attribution {
-  position: fixed;
-  left: var(--gutter);
-  bottom: 6px;
-  z-index: 5;
-  color: var(--muted-foreground);
-  font-size: 10px;
-  opacity: 0.7;
-  max-width: 60vw;
-}
-footer.attribution a { color: inherit; }
 
 @media (max-width: 640px) {
   #cellPanel { width: 100vw; }

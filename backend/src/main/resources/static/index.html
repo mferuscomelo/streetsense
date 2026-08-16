@@ -61,6 +61,10 @@
     <span class="single"><span class="swatch"></span>single contributor</span>
     <span class="corroborated"><span class="swatch"></span>crowd-corroborated</span>
   </div>
+  <p class="legend-disclaimer">
+    Cells marked <strong>seeded</strong> include generated demo data — never presented as measured.
+    See docs/honest-caveats.md.
+  </p>
 </div>
 
 <section class="overlay overlay-feed" id="feedOverlay">
@@ -85,12 +89,10 @@
 
 <aside id="cellPanel" hidden aria-label="Cell detail"></aside>
 
-<footer class="attribution">
-  Map &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>
-  contributors &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>.
-  Readings and contributors marked <strong>seeded</strong> are generated to demonstrate the crowd layer with one
-  physical node — never presented as measured. See docs/honest-caveats.md.
-</footer>
+<!-- Map copyright itself lives in Leaflet's own attribution control
+     (set via the tileLayer's `attribution` option in dashboard.js) rather
+     than a second, separately-positioned footer — one attribution surface
+     instead of two competing for the same bottom-of-screen space. -->
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
