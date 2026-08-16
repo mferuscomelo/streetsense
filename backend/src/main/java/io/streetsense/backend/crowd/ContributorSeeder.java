@@ -60,8 +60,9 @@ public class ContributorSeeder {
     }
 
     private int seed(SeedSettings settings, IngestService ingestService) throws Exception {
-        // Fixed seed: the demo should show the same city every time it is run,
-        // so a recorded walkthrough matches what a judge sees on their own machine.
+        // Fixed seed: the demo should show the same neighborhood shape every
+        // time it is run, so a recorded walkthrough matches what a judge
+        // sees on their own machine.
         Random random = new Random(20260816L);
         Instant base = Instant.now().minus(Duration.ofDays(7));
         int written = 0;
@@ -69,24 +70,28 @@ public class ContributorSeeder {
         for (int c = 0; c < settings.getContributors(); c++) {
             String contributorId = CrowdService.SEEDED_PREFIX + "contributor-" + c;
 
-            // Contributors walk OVERLAPPING stretches of one shared street,
-            // each starting a couple of blocks further along than the last.
-            // The overlap is the entire point: it produces cells that several
-            // people have independently sampled (CORROBORATED) next to cells
-            // only one person has (SINGLE_CONTRIBUTOR), which is what makes
-            // the confidence distinction visible instead of theoretical.
+            // Contributors are laid out across a handful of parallel
+            // "avenues" (longitude offset) as well as staggered starting
+            // points along each one (latitude offset) — a 2-D block, not
+            // one street. Overlap is still the entire point: it produces
+            // cells that several people have independently sampled
+            // (CORROBORATED) next to cells only one person has
+            // (SINGLE_CONTRIBUTOR), which is what makes the confidence
+            // distinction visible instead of theoretical.
             //
             // An earlier version gave each contributor their own parallel
-            // column, so no two ever shared a cell and every cell in the city
-            // reported exactly one contributor — the crowd layer rendered
-            // perfectly and demonstrated nothing.
-            int startCell = c * settings.getRouteOffsetCells();
+            // column with zero overlap, so no two ever shared a cell and
+            // every cell in the city reported exactly one contributor — the
+            // crowd layer rendered perfectly and demonstrated nothing.
+            int avenue = c % settings.getAvenueCount();
+            int progress = c / settings.getAvenueCount();
+            int startCell = progress * settings.getRouteOffsetCells();
 
             for (int step = 0; step < settings.getCells(); step++) {
                 int cellIndex = startCell + step;
                 GridCell cell = GridCell.of(
                         settings.getCenterLat() + cellIndex * 0.001,
-                        settings.getCenterLon());
+                        settings.getCenterLon() + avenue * settings.getAvenueOffsetCells() * 0.001);
 
                 for (int hour : settings.getHours()) {
                     // Traffic-shaped, so the cleanest/quietest-hour
@@ -106,7 +111,7 @@ public class ContributorSeeder {
 
                         DecodedReading reading = new DecodedReading(
                                 packet, cell, hour,
-                                contributorId + "-session-" + cellIndex + "-" + hour,
+                                contributorId + "-session-" + avenue + "-" + cellIndex + "-" + hour,
                                 contributorId, Activity.WALK,
                                 base.plus(Duration.ofSeconds(written)));
 
@@ -124,12 +129,16 @@ public class ContributorSeeder {
         private boolean enabled = false;
         private double centerLat = 49.0069;
         private double centerLon = 8.4037;
-        private int contributors = 4;
-        private int cells = 10;
-        /** How far along the shared street each contributor starts. Smaller = more overlap. */
+        private int contributors = 16;
+        private int cells = 14;
+        /** How far along a shared avenue each successive contributor on it starts. Smaller = more overlap. */
         private int routeOffsetCells = 2;
-        private int samplesPerHour = 8;
-        private int[] hours = {6, 7, 8, 12, 17, 18, 21};
+        /** How many parallel avenues contributors are spread across. */
+        private int avenueCount = 4;
+        /** Longitude spacing (in cells) between adjacent avenues. */
+        private int avenueOffsetCells = 3;
+        private int samplesPerHour = 10;
+        private int[] hours = {6, 7, 8, 9, 12, 15, 17, 18, 19, 21};
 
         /**
          * A plausible diurnal traffic curve. Deliberately not flat outside
@@ -159,9 +168,13 @@ public class ContributorSeeder {
         public int getContributors() { return contributors; }
         public void setContributors(int contributors) { this.contributors = contributors; }
         public int getCells() { return cells; }
+        public void setCells(int cells) { this.cells = cells; }
         public int getRouteOffsetCells() { return routeOffsetCells; }
         public void setRouteOffsetCells(int routeOffsetCells) { this.routeOffsetCells = routeOffsetCells; }
-        public void setCells(int cells) { this.cells = cells; }
+        public int getAvenueCount() { return avenueCount; }
+        public void setAvenueCount(int avenueCount) { this.avenueCount = avenueCount; }
+        public int getAvenueOffsetCells() { return avenueOffsetCells; }
+        public void setAvenueOffsetCells(int avenueOffsetCells) { this.avenueOffsetCells = avenueOffsetCells; }
         public int getSamplesPerHour() { return samplesPerHour; }
         public void setSamplesPerHour(int samplesPerHour) { this.samplesPerHour = samplesPerHour; }
         public int[] getHours() { return hours; }
