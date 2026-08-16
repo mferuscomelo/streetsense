@@ -4,6 +4,7 @@ import io.streetsense.backend.domain.Activity;
 import io.streetsense.backend.domain.DecodedReading;
 import io.streetsense.backend.domain.GridCell;
 import io.streetsense.backend.ingest.IngestService;
+import io.streetsense.backend.repository.ReadingRepository;
 import io.streetsense.backend.wire.DecodedPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,26 +41,59 @@ public class ContributorSeeder {
 
     private static final Logger log = LoggerFactory.getLogger(ContributorSeeder.class);
 
+    private final ReadingRepository repository;
+    private final IngestService ingestService;
+    private final SeedSettings settings;
+
+    public ContributorSeeder(ReadingRepository repository, IngestService ingestService, SeedSettings settings) {
+        this.repository = repository;
+        this.ingestService = ingestService;
+        this.settings = settings;
+    }
+
+    // Static so Spring can create this bean without first constructing
+    // ContributorSeeder itself — which now takes a SeedSettings in its own
+    // constructor. An instance @Bean method here would be circular.
     @Bean
     @ConfigurationProperties("streetsense.seed")
-    public SeedSettings seedSettings() {
+    public static SeedSettings seedSettings() {
         return new SeedSettings();
     }
 
     @Bean
-    public ApplicationRunner seedRunner(SeedSettings settings, IngestService ingestService) {
+    public ApplicationRunner seedRunner() {
         return args -> {
             if (!settings.isEnabled()) {
                 return;
             }
-            int written = seed(settings, ingestService);
+            int written = seed(settings.toParams());
             log.warn("Seeded {} synthetic readings from {} generated contributors. "
                             + "Every one is flagged mock and prefixed '{}' — see docs/honest-caveats.md.",
                     written, settings.getContributors(), CrowdService.SEEDED_PREFIX);
         };
     }
 
-    private int seed(SeedSettings settings, IngestService ingestService) throws Exception {
+    /**
+     * Re-seeds around a caller-supplied center — the dashboard's resolved
+     * geolocation, typically — instead of the configured default. Evicts
+     * whatever seeded data exists first, so repeated calls (page reloads,
+     * geolocation resolving after an initial fallback paint) replace the
+     * visible neighborhood rather than layering duplicates under the same
+     * deterministic contributor ids, or leaving a stray cluster behind at
+     * the old center. Never touches measured readings — eviction only
+     * matches {@link CrowdService#isSeeded}.
+     */
+    public int seedAround(double lat, double lon) throws Exception {
+        if (!settings.isEnabled()) {
+            throw new IllegalStateException("streetsense.seed.enabled is false");
+        }
+        repository.evictWhere(CrowdService::isSeeded);
+        int written = seed(settings.toParams().withCenter(lat, lon));
+        log.info("Re-seeded {} synthetic readings around {},{}", written, lat, lon);
+        return written;
+    }
+
+    private int seed(SeedParams params) throws Exception {
         // Fixed seed: the demo should show the same neighborhood shape every
         // time it is run, so a recorded walkthrough matches what a judge
         // sees on their own machine.
@@ -67,7 +101,7 @@ public class ContributorSeeder {
         Instant base = Instant.now().minus(Duration.ofDays(7));
         int written = 0;
 
-        for (int c = 0; c < settings.getContributors(); c++) {
+        for (int c = 0; c < params.contributors(); c++) {
             String contributorId = CrowdService.SEEDED_PREFIX + "contributor-" + c;
 
             // Contributors are laid out across a handful of parallel
@@ -83,23 +117,23 @@ public class ContributorSeeder {
             // column with zero overlap, so no two ever shared a cell and
             // every cell in the city reported exactly one contributor — the
             // crowd layer rendered perfectly and demonstrated nothing.
-            int avenue = c % settings.getAvenueCount();
-            int progress = c / settings.getAvenueCount();
-            int startCell = progress * settings.getRouteOffsetCells();
+            int avenue = c % params.avenueCount();
+            int progress = c / params.avenueCount();
+            int startCell = progress * params.routeOffsetCells();
 
-            for (int step = 0; step < settings.getCells(); step++) {
+            for (int step = 0; step < params.cells(); step++) {
                 int cellIndex = startCell + step;
                 GridCell cell = GridCell.of(
-                        settings.getCenterLat() + cellIndex * 0.001,
-                        settings.getCenterLon() + avenue * settings.getAvenueOffsetCells() * 0.001);
+                        params.centerLat() + cellIndex * 0.001,
+                        params.centerLon() + avenue * params.avenueOffsetCells() * 0.001);
 
-                for (int hour : settings.getHours()) {
+                for (int hour : params.hours()) {
                     // Traffic-shaped, so the cleanest/quietest-hour
                     // recommendation has a real pattern to find rather than
                     // picking whichever hour noise happened to favour.
-                    double rushFactor = settings.rushFactorFor(hour);
+                    double rushFactor = rushFactorFor(hour);
 
-                    for (int sample = 0; sample < settings.getSamplesPerHour(); sample++) {
+                    for (int sample = 0; sample < params.samplesPerHour(); sample++) {
                         double pm25 = 9.0 * rushFactor + random.nextGaussian() * 2.0;
                         double voc = 110.0 * rushFactor + random.nextGaussian() * 12.0;
                         double noise = 48.0 + (rushFactor - 1) * 9.0 + random.nextGaussian() * 2.5;
@@ -124,6 +158,38 @@ public class ContributorSeeder {
         return written;
     }
 
+    /**
+     * A plausible diurnal traffic curve. Deliberately not flat outside rush
+     * hour: if every non-rush hour shared one factor, "cleanest hour" would
+     * be decided by random noise and the recommendation would be
+     * meaningless even though it rendered fine.
+     */
+    private static double rushFactorFor(int hour) {
+        return switch (hour) {
+            case 6 -> 0.7;   // clearly the cleanest, and the answer the demo should give
+            case 7 -> 2.3;
+            case 8 -> 2.6;   // morning peak
+            case 12 -> 1.2;
+            case 17 -> 2.4;
+            case 18 -> 2.6;  // evening peak
+            case 21 -> 0.9;
+            default -> 1.0;
+        };
+    }
+
+    /** Immutable snapshot of one seeding run's parameters — see {@link SeedSettings#toParams()}. */
+    public record SeedParams(
+            double centerLat, double centerLon,
+            int contributors, int cells, int routeOffsetCells,
+            int avenueCount, int avenueOffsetCells,
+            int samplesPerHour, int[] hours) {
+
+        public SeedParams withCenter(double lat, double lon) {
+            return new SeedParams(lat, lon, contributors, cells, routeOffsetCells,
+                    avenueCount, avenueOffsetCells, samplesPerHour, hours);
+        }
+    }
+
     /** Bound from {@code streetsense.seed.*}. Disabled unless explicitly enabled. */
     public static class SeedSettings {
         private boolean enabled = false;
@@ -140,23 +206,9 @@ public class ContributorSeeder {
         private int samplesPerHour = 10;
         private int[] hours = {6, 7, 8, 9, 12, 15, 17, 18, 19, 21};
 
-        /**
-         * A plausible diurnal traffic curve. Deliberately not flat outside
-         * rush hour: if every non-rush hour shared one factor, "cleanest hour"
-         * would be decided by random noise and the recommendation would be
-         * meaningless even though it rendered fine.
-         */
-        double rushFactorFor(int hour) {
-            return switch (hour) {
-                case 6 -> 0.7;   // clearly the cleanest, and the answer the demo should give
-                case 7 -> 2.3;
-                case 8 -> 2.6;   // morning peak
-                case 12 -> 1.2;
-                case 17 -> 2.4;
-                case 18 -> 2.6;  // evening peak
-                case 21 -> 0.9;
-                default -> 1.0;
-            };
+        SeedParams toParams() {
+            return new SeedParams(centerLat, centerLon, contributors, cells, routeOffsetCells,
+                    avenueCount, avenueOffsetCells, samplesPerHour, hours);
         }
 
         public boolean isEnabled() { return enabled; }
