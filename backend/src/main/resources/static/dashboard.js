@@ -141,6 +141,19 @@ function formatValue(v, decimals) {
   return v.toFixed(decimals);
 }
 
+function confidenceLabel(confidence) {
+  return confidence === 'CORROBORATED' ? 'corroborated'
+      : confidence === 'SINGLE_CONTRIBUTOR' ? 'single contributor'
+      : 'not enough data';
+}
+
+// Leaflet marks interactive markers role="button" tabindex="0" automatically,
+// but assigns no accessible name — without this a screen reader hits 80+
+// identical, indistinguishable "button"s on a map that IS the product.
+function markerLabel(cell) {
+  return `Cell ${cell.latBucket}, ${cell.lonBucket}: ${cell.meanPm2_5.toFixed(1)} µg/m³ PM2.5, ${confidenceLabel(cell.confidence)}`;
+}
+
 function el(tag, className, text) {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -216,9 +229,11 @@ function drawCellIcons({ forceRebuild = false } = {}) {
 
     if (canUpdateInPlace) {
       cellMarkers[i].setIcon(icon);
+      cellMarkers[i].getElement()?.setAttribute('aria-label', markerLabel(cell));
     } else {
       const marker = L.marker(cellCenter(cell), { icon }).addTo(map);
       marker.on('click', () => openCellPanel(cell.latBucket, cell.lonBucket));
+      marker.getElement()?.setAttribute('aria-label', markerLabel(cell));
       cellMarkers.push(marker);
     }
   });
