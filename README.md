@@ -91,13 +91,27 @@ And closed up, it looks like this:
 
 ### Hardware
 
-| Component                                                                      | Role                                                                                                                                                                                                                                                                     | Protocol                                                                                                                                                                                                  |
-| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Adafruit LED Glasses Driver, nRF52840](https://www.adafruit.com/product/5217) | MCU and BLE radio. Bluetooth Low Energy on this chip draws very little power, which matters on something running off a small battery, and the board happens to carry an onboard PDM digital microphone and an accelerometer too, so noise sensing needed no extra parts. | BLE (peripheral), and the I2C host for the two sensors below                                                                                                                                              |
-| Sensirion SEN54                                                                | Particulate matter (PM1, PM2.5, PM4, PM10), VOC index, temperature, humidity                                                                                                                                                                                             | I2C (a simple two wire protocol many sensor chips use to talk to a microcontroller), via a STEMMA QT adapter breakout, a small keyed connector so the cable can't be plugged in backwards, address `0x69` |
-| Onboard PDM digital microphone                                                 | Noise level                                                                                                                                                                                                                                                              | PDM (pulse density modulation, a common way small digital microphones encode audio), decoded on chip via the nRF52840's own PDM peripheral                                                                |
-| [Adafruit MAX17048 fuel gauge](https://www.adafruit.com/product/5580)          | Battery voltage, state of charge, charge rate                                                                                                                                                                                                                            | I2C via STEMMA QT, address `0x36`, sharing the bus with the SEN54 at a different address                                                                                                                  |
-| 2500 mAh, 3.7V LiPo cell                                                       | Power                                                                                                                                                                                                                                                                    | Wired to both the driver board's onboard charge circuit and directly across the MAX17048's sense leads                                                                                                    |
+- **[Adafruit LED Glasses Driver, nRF52840](https://www.adafruit.com/product/5217)**
+  is the MCU and BLE radio. Bluetooth Low Energy on this chip draws very
+  little power, which matters on something running off a small battery, and
+  the board happens to carry an onboard PDM digital microphone and an
+  accelerometer too, so noise sensing needed no extra parts. It speaks BLE as
+  a peripheral, and doubles as the I2C host for the two sensors below.
+- **Sensirion SEN54** measures particulate matter (PM1, PM2.5, PM4, PM10),
+  VOC index, temperature, and humidity. It connects over I2C (a simple two
+  wire protocol many sensor chips use to talk to a microcontroller), via a
+  STEMMA QT adapter breakout, a small keyed connector so the cable can't be
+  plugged in backwards, at address `0x69`.
+- The **onboard PDM digital microphone** picks up noise level, decoded on
+  chip via PDM (pulse density modulation, a common way small digital
+  microphones encode audio) through the nRF52840's own PDM peripheral.
+- The **[Adafruit MAX17048 fuel gauge](https://www.adafruit.com/product/5580)**
+  reports battery voltage, state of charge, and charge rate, also over I2C
+  via STEMMA QT, at address `0x36`, sharing the bus with the SEN54 at a
+  different address.
+- A **2500 mAh, 3.7V LiPo cell** supplies power, wired to both the driver
+  board's onboard charge circuit and directly across the MAX17048's sense
+  leads.
 
 The SEN54 needs its own driver to talk I2C correctly, checksums included, so
 the firmware uses [Sensirion's own driver](https://github.com/Sensirion/arduino-i2c-sen5x)
@@ -325,10 +339,6 @@ gets the thing that got them to install the app in the first place: whether
 today is actually worth running outside for, and which way to go.
 
 [streetsense.tech](https://streetsense.tech/) has more on where this project is headed, plus a waitlist if you would like early access.
-
-## Demo video
-
-**[ADD VIDEO LINK before you submit]**
 
 ## Limits
 
