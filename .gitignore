@@ -34,3 +34,6 @@ Thumbs.db
 firmware/tools/__pycache__/
 *.pyc
 .venv/
+
+# --- Demo recordings (link from README instead) ---
+docs/videos/

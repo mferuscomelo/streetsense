@@ -4,6 +4,8 @@
 
 Know what you're breathing, everywhere you go, not just at home.
 
+[![StreetSense demo video](https://img.youtube.com/vi/7NOgXHcya4o/maxresdefault.jpg)](https://youtu.be/7NOgXHcya4o)
+
 ## The story
 
 ### Why I built this
